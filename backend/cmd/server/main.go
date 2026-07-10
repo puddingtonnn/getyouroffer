@@ -5,7 +5,12 @@ package main
 // @version 1.0
 // @description API server for GetYourOffer service.
 // @host localhost:8090
-// @BasePath /api
+// @BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer <your-jwt-token>" to authenticate.
 
 import (
 	"context"

@@ -1,9 +1,113 @@
-basePath: /api
+basePath: /
+definitions:
+  user.Profile:
+    properties:
+      created_at:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  user.authResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  user.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  user.registerRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+    type: object
 host: localhost:8090
 info:
   contact: {}
   description: API server for GetYourOffer service.
   title: GetYourOffer API
   version: "1.0"
-paths: {}
+paths:
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT
+      parameters:
+      - description: Login info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.authResponse'
+      summary: Login user
+      tags:
+      - users
+  /users/me:
+    get:
+      description: Get profile of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.Profile'
+      security:
+      - ApiKeyAuth: []
+      summary: Get current profile
+      tags:
+      - users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user and profile
+      parameters:
+      - description: Registration info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/user.authResponse'
+      summary: Register a new user
+      tags:
+      - users
+securityDefinitions:
+  ApiKeyAuth:
+    description: Type "Bearer <your-jwt-token>" to authenticate.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

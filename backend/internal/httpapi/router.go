@@ -13,7 +13,9 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
+
 	_ "github.com/puddingtonnn/getyouroffer/backend/docs"
+	"github.com/puddingtonnn/getyouroffer/backend/internal/user"
 )
 
 // NewRouter assembles the API routes. pool may be nil when the server runs
@@ -35,6 +37,18 @@ func NewRouter(pool *pgxpool.Pool) http.Handler {
 
 	r.Get("/api/health", handleHealth(pool))
 	r.Mount("/swagger", httpSwagger.WrapHandler)
+
+	// User routes
+	if pool != nil {
+		userRepo := user.NewRepository(pool)
+		userHandler := user.NewHandler(userRepo)
+
+		r.Route("/api/users", func(r chi.Router) {
+			r.Post("/register", userHandler.Register)
+			r.Post("/login", userHandler.Login)
+			r.With(user.AuthMiddleware).Get("/me", userHandler.GetProfile)
+		})
+	}
 
 	return r
 }
