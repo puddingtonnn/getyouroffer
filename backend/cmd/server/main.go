@@ -1,6 +1,12 @@
 // Command server runs the GetYourOffer HTTP API.
 package main
 
+// @title GetYourOffer API
+// @version 1.0
+// @description API server for GetYourOffer service.
+// @host localhost:8090
+// @BasePath /api
+
 import (
 	"context"
 	"fmt"

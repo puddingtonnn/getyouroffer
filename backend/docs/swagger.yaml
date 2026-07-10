@@ -1,0 +1,9 @@
+basePath: /api
+host: localhost:8090
+info:
+  contact: {}
+  description: API server for GetYourOffer service.
+  title: GetYourOffer API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

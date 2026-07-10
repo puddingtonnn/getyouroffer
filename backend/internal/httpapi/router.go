@@ -12,6 +12,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+	_ "github.com/puddingtonnn/getyouroffer/backend/docs"
 )
 
 // NewRouter assembles the API routes. pool may be nil when the server runs
@@ -32,6 +34,9 @@ func NewRouter(pool *pgxpool.Pool) http.Handler {
 	}))
 
 	r.Get("/api/health", handleHealth(pool))
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8090/swagger/doc.json"),
+	))
 
 	return r
 }
