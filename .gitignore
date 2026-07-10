@@ -24,8 +24,21 @@ profile.cov
 go.work
 go.work.sum
 
-# env file
+# env files
 .env
+.env.*
+!.env.example
+
+# Node / frontend
+node_modules/
+frontend/dist/
+*.local
+
+# macOS
+.DS_Store
+
+# local tooling
+.remember/
 
 # Editor/IDE
 # .idea/
