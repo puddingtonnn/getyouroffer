@@ -29,7 +29,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.loginRequest"
+                            "$ref": "#/definitions/http.loginRequest"
                         }
                     }
                 ],
@@ -37,7 +37,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/user.authResponse"
+                            "$ref": "#/definitions/http.authResponse"
                         }
                     }
                 }
@@ -62,7 +62,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/user.Profile"
+                            "$ref": "#/definitions/models.Profile"
                         }
                     }
                 }
@@ -88,7 +88,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.registerRequest"
+                            "$ref": "#/definitions/http.registerRequest"
                         }
                     }
                 ],
@@ -96,7 +96,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/user.authResponse"
+                            "$ref": "#/definitions/http.authResponse"
                         }
                     }
                 }
@@ -104,7 +104,43 @@
         }
     },
     "definitions": {
-        "user.Profile": {
+        "http.authResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.loginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.registerRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Profile": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -123,42 +159,6 @@
                     "type": "string"
                 },
                 "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "user.authResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "user.loginRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "user.registerRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "password": {
                     "type": "string"
                 }
             }

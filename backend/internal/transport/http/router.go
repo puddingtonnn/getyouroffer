@@ -1,9 +1,11 @@
-// Package httpapi wires the HTTP routes and middleware of the API server.
-package httpapi
+// Package http is the transport layer: it wires the HTTP routes and middleware,
+// holds the feature handlers, and owns the shared response helpers. It only
+// routes and translates HTTP; all dependencies are constructed in cmd/server
+// (the composition root) and injected as ready handlers.
+package http
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 	"net/http"
 	"time"
@@ -15,16 +17,17 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 
 	_ "github.com/puddingtonnn/getyouroffer/backend/docs"
-	"github.com/puddingtonnn/getyouroffer/backend/internal/user"
 )
 
 // NewRouter assembles the API routes. pool may be nil when the server runs
-// without a database.
-func NewRouter(pool *pgxpool.Pool) http.Handler {
+// without a database; tailorH and userH may be nil (e.g. in tests, or userH
+// without a database) — their routes are then not mounted.
+func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
+	// middleware.RealIP is deliberately absent: it trusts spoofable
+	// X-Forwarded-For headers and is deprecated (GHSA-3fxj-6jh8-hvhx).
 	// Logger records method/path/status only. Request bodies must never be
 	// logged: they will contain resumes, i.e. personal data.
 	r.Use(middleware.Logger)
@@ -38,15 +41,18 @@ func NewRouter(pool *pgxpool.Pool) http.Handler {
 	r.Get("/api/health", handleHealth(pool))
 	r.Mount("/swagger", httpSwagger.WrapHandler)
 
-	// User routes
-	if pool != nil {
-		userRepo := user.NewRepository(pool)
-		userHandler := user.NewHandler(userRepo)
+	if tailorH != nil {
+		// Throttle: each tailor request pins the upload in memory and holds a
+		// paid LLM call for up to ~90s, so cap concurrent work until real
+		// auth/quotas land.
+		r.With(middleware.Throttle(4)).Post("/api/tailor", tailorH.Tailor)
+	}
 
+	if userH != nil {
 		r.Route("/api/users", func(r chi.Router) {
-			r.Post("/register", userHandler.Register)
-			r.Post("/login", userHandler.Login)
-			r.With(user.AuthMiddleware).Get("/me", userHandler.GetProfile)
+			r.Post("/register", userH.Register)
+			r.Post("/login", userH.Login)
+			r.With(AuthMiddleware).Get("/me", userH.GetProfile)
 		})
 	}
 
@@ -66,13 +72,6 @@ func handleHealth(pool *pgxpool.Pool) http.HandlerFunc {
 				db = "ok"
 			}
 		}
-		writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "db": db})
-	}
-}
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		slog.Error("encoding response", "err", err)
+		WriteJSON(w, http.StatusOK, map[string]string{"status": "ok", "db": db})
 	}
 }

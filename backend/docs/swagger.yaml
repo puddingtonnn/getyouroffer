@@ -1,6 +1,29 @@
 basePath: /
 definitions:
-  user.Profile:
+  http.authResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  http.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  http.registerRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+    type: object
+  models.Profile:
     properties:
       created_at:
         type: string
@@ -13,29 +36,6 @@ definitions:
       updated_at:
         type: string
       user_id:
-        type: string
-    type: object
-  user.authResponse:
-    properties:
-      token:
-        type: string
-    type: object
-  user.loginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    type: object
-  user.registerRequest:
-    properties:
-      email:
-        type: string
-      first_name:
-        type: string
-      last_name:
-        type: string
-      password:
         type: string
     type: object
 host: localhost:8090
@@ -56,14 +56,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/user.loginRequest'
+          $ref: '#/definitions/http.loginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/user.authResponse'
+            $ref: '#/definitions/http.authResponse'
       summary: Login user
       tags:
       - users
@@ -76,7 +76,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/user.Profile'
+            $ref: '#/definitions/models.Profile'
       security:
       - ApiKeyAuth: []
       summary: Get current profile
@@ -93,14 +93,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/user.registerRequest'
+          $ref: '#/definitions/http.registerRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/user.authResponse'
+            $ref: '#/definitions/http.authResponse'
       summary: Register a new user
       tags:
       - users

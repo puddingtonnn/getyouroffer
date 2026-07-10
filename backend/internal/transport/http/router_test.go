@@ -1,4 +1,4 @@
-package httpapi
+package http
 
 import (
 	"encoding/json"
@@ -18,7 +18,7 @@ func TestHealth(t *testing.T) {
 		{name: "unknown route", path: "/api/nope", status: http.StatusNotFound},
 	}
 
-	router := NewRouter(nil)
+	router := NewRouter(nil, nil, nil)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
