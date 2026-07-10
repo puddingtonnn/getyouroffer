@@ -8,13 +8,24 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      # $$ обязателен: одиночный $ compose интерполирует сам при парсинге.
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-app} -d $${POSTGRES_DB:-getyouroffer}"]
-      interval: 3s
-      timeout: 3s
-      retries: 10
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gyo-backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8090:8090"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://app:app@db:5432/getyouroffer?sslmode=disable
+      - PORT=8090
 
 volumes:
   pgdata:
