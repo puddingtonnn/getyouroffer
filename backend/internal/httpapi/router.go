@@ -34,9 +34,7 @@ func NewRouter(pool *pgxpool.Pool) http.Handler {
 	}))
 
 	r.Get("/api/health", handleHealth(pool))
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8090/swagger/doc.json"),
-	))
+	r.Mount("/swagger", httpSwagger.WrapHandler)
 
 	return r
 }
