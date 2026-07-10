@@ -46,7 +46,7 @@ type authResponse struct {
 // @Produce json
 // @Param request body registerRequest true "Registration info"
 // @Success 201 {object} authResponse
-// @Router /users/register [post]
+// @Router /api/users/register [post]
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -86,7 +86,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param request body loginRequest true "Login info"
 // @Success 200 {object} authResponse
-// @Router /users/login [post]
+// @Router /api/users/login [post]
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -116,7 +116,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Success 200 {object} Profile
 // @Security ApiKeyAuth
-// @Router /users/me [get]
+// @Router /api/users/me [get]
 func (h *Handler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	userIDStr, ok := r.Context().Value("user_id").(string)
 	if !ok {

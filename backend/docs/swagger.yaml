@@ -45,7 +45,7 @@ info:
   title: GetYourOffer API
   version: "1.0"
 paths:
-  /users/login:
+  /api/users/login:
     post:
       consumes:
       - application/json
@@ -67,7 +67,7 @@ paths:
       summary: Login user
       tags:
       - users
-  /users/me:
+  /api/users/me:
     get:
       description: Get profile of the authenticated user
       produces:
@@ -82,7 +82,7 @@ paths:
       summary: Get current profile
       tags:
       - users
-  /users/register:
+  /api/users/register:
     post:
       consumes:
       - application/json

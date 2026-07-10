@@ -9,7 +9,7 @@
     "host": "localhost:8090",
     "basePath": "/",
     "paths": {
-        "/users/login": {
+        "/api/users/login": {
             "post": {
                 "description": "Authenticate user and return JWT",
                 "consumes": [
@@ -43,7 +43,7 @@
                 }
             }
         },
-        "/users/me": {
+        "/api/users/me": {
             "get": {
                 "security": [
                     {
@@ -68,7 +68,7 @@
                 }
             }
         },
-        "/users/register": {
+        "/api/users/register": {
             "post": {
                 "description": "Create a new user and profile",
                 "consumes": [

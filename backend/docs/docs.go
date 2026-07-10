@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/users/login": {
+        "/api/users/login": {
             "post": {
                 "description": "Authenticate user and return JWT",
                 "consumes": [
@@ -49,7 +49,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/me": {
+        "/api/users/me": {
             "get": {
                 "security": [
                     {
@@ -74,7 +74,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/register": {
+        "/api/users/register": {
             "post": {
                 "description": "Create a new user and profile",
                 "consumes": [

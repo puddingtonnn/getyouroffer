@@ -57,9 +57,10 @@ func handleHealth(pool *pgxpool.Pool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		db := "not_configured"
 		if pool != nil {
-			ctx, cancel := context.WithTimeout(r.Context(), time.Second)
+			ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 			defer cancel()
 			if err := pool.Ping(ctx); err != nil {
+				slog.Error("health check: database ping failed", "err", err)
 				db = "unavailable"
 			} else {
 				db = "ok"
@@ -68,7 +69,6 @@ func handleHealth(pool *pgxpool.Pool) http.HandlerFunc {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "db": db})
 	}
 }
-
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)

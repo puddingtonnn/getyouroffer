@@ -47,6 +47,7 @@ func run() error {
 	if cfg.DatabaseURL == "" {
 		slog.Warn("DATABASE_URL is empty, running without a database")
 	} else {
+		slog.Info("connecting to database", "url", cfg.DatabaseURL)
 		var err error
 		pool, err = pgxpool.New(ctx, cfg.DatabaseURL)
 		if err != nil {
@@ -54,13 +55,14 @@ func run() error {
 		}
 		defer pool.Close()
 
-		pingCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		if err := pool.Ping(pingCtx); err != nil {
-			slog.Warn("database unavailable at startup, continuing", "err", err)
+			slog.Warn("database unavailable at startup, continuing in degraded mode", "err", err)
+		} else {
+			slog.Info("database connection established successfully")
 		}
 		cancel()
 	}
-
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
 		Handler:           httpapi.NewRouter(pool),
