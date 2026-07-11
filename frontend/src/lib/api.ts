@@ -159,9 +159,11 @@ export function createVacancy(name: string, description: string, source: string)
   return request<Vacancy>('/vacancies/', jsonInit('POST', { name, description, source }))
 }
 
-export function listVacancies(): Promise<VacancyWithResumes[]> {
+// Note: the list endpoint returns bare vacancies; resumes are only included
+// by GET /api/vacancies/{id}.
+export function listVacancies(): Promise<Vacancy[]> {
   if (demo.isDemoMode()) return demo.listVacancies()
-  return request<VacancyWithResumes[]>('/vacancies/')
+  return request<Vacancy[]>('/vacancies/')
 }
 
 export function getVacancy(id: string): Promise<VacancyWithResumes> {

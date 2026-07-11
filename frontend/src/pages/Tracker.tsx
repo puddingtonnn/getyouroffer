@@ -39,7 +39,7 @@ function FunnelBar({ label, value, max, accent, delay }: { label: string; value:
 export default function Tracker() {
   usePageTitle('Трекер')
 
-  const [vacancies, setVacancies] = useState<api.VacancyWithResumes[]>([])
+  const [vacancies, setVacancies] = useState<api.Vacancy[]>([])
   const [filter, setFilter] = useState<Filter>('all')
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
@@ -187,17 +187,17 @@ export default function Tracker() {
                       {vacancies.length === 0 ? (
                         <>
                           <p className="font-sans text-sm text-steel">
-                            Здесь появятся ваши отклики. Первый занимает около минуты —
-                            понадобится текст вакансии и резюме в PDF.
+                            Здесь появятся ваши вакансии. Добавьте первую — потом приложите
+                            резюме и соберёте отклик за минуту.
                           </p>
                           <Link
-                            to="/app/new?example=1"
+                            to="/app/vacancies/new?example=1"
                             className="mt-4 inline-block rounded-xl bg-accent px-5 py-3 font-sans text-sm font-bold text-accent-ink shadow-cta transition hover:brightness-110"
                           >
-                            Попробовать на примере вакансии →
+                            Начать с примера вакансии →
                           </Link>
                           <p className="mt-2.5 font-mono text-[11px] text-steel">
-                            подставим текст за вас — своё резюме всё же понадобится
+                            подставим текст за вас — своё резюме понадобится на шаге отклика
                           </p>
                         </>
                       ) : (
@@ -264,10 +264,10 @@ export default function Tracker() {
                   ))}
 
                   <Link
-                    to="/app/new"
+                    to="/app/vacancies/new"
                     className="block px-5 py-3.5 font-sans text-[13px] font-bold text-accent transition hover:bg-accent/6"
                   >
-                    + Новый отклик — минута
+                    + Новая вакансия
                   </Link>
                 </div>
               </div>

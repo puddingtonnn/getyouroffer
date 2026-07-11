@@ -2,8 +2,8 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, RequireAuth } from './lib/auth'
 import Landing from './pages/Landing'
 import AuthPage from './pages/AuthPage'
-import NewResponse from './pages/NewResponse'
-import VacancyResult from './pages/VacancyResult'
+import CreateVacancy from './pages/CreateVacancy'
+import VacancyDetail from './pages/VacancyDetail'
 import Tracker from './pages/Tracker'
 
 function App() {
@@ -13,11 +13,23 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
+        {/* Vacancy-first flow: the tracker is the app home. */}
+        <Route path="/app" element={<Navigate to="/app/tracker" replace />} />
+        {/* Legacy combined route → new create-vacancy step. */}
+        <Route path="/app/new" element={<Navigate to="/app/vacancies/new" replace />} />
         <Route
-          path="/app/new"
+          path="/app/tracker"
           element={
             <RequireAuth>
-              <NewResponse />
+              <Tracker />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/app/vacancies/new"
+          element={
+            <RequireAuth>
+              <CreateVacancy />
             </RequireAuth>
           }
         />
@@ -25,15 +37,7 @@ function App() {
           path="/app/vacancies/:id"
           element={
             <RequireAuth>
-              <VacancyResult />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/app/tracker"
-          element={
-            <RequireAuth>
-              <Tracker />
+              <VacancyDetail />
             </RequireAuth>
           }
         />

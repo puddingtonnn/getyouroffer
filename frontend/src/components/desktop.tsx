@@ -39,11 +39,11 @@ export function MenuBar({ nav = false }: { nav?: boolean }) {
         </Link>
         {nav ? (
           <span className="flex gap-4.5">
-            <NavLink to="/app/new" className={menuItem}>
-              Новый отклик
-            </NavLink>
             <NavLink to="/app/tracker" className={menuItem}>
               Трекер
+            </NavLink>
+            <NavLink to="/app/vacancies/new" className={menuItem}>
+              Новая вакансия
             </NavLink>
           </span>
         ) : (
@@ -102,7 +102,7 @@ export function MenuBar({ nav = false }: { nav?: boolean }) {
         ) : (
           !nav && (
             <Link
-              to={authed ? '/app/new' : '/register'}
+              to={authed ? '/app/tracker' : '/register'}
               className="font-semibold text-ink transition hover:text-accent"
             >
               {authed ? 'в приложение →' : 'Регистрация →'}

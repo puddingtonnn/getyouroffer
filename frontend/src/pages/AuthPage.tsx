@@ -14,7 +14,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const { login, register, startDemo } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: string } | null)?.from ?? '/app/new'
+  const from = (location.state as { from?: string } | null)?.from ?? '/app/tracker'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

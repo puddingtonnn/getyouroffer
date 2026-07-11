@@ -125,10 +125,12 @@ function DockIcon({ to, title, children }: { to: string; title: string; children
 export default function Landing() {
   const { authed } = useAuth()
   const navigate = useNavigate()
-  const cta = authed ? '/app/new' : '/register'
+  // Vacancy-first: the primary action starts a new vacancy (then отклик).
+  const cta = authed ? '/app/vacancies/new' : '/register'
   const [dragOver, setDragOver] = useState(false)
 
-  // Dropping a real PDF onto the hero window stashes it and jumps into the app.
+  // Dropping a real PDF onto the hero window stashes it and jumps into the
+  // flow; the resume is picked up on the отклик step of the new vacancy.
   function onHeroDrop(e: React.DragEvent) {
     e.preventDefault()
     setDragOver(false)
