@@ -22,7 +22,13 @@ FROM alpine:latest
 WORKDIR /app
 
 # Install runtime dependencies (ca-certificates for HTTPS, tzdata for timezones)
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    poppler-utils \
+    tesseract-ocr \
+    tesseract-ocr-data-eng \
+    tesseract-ocr-data-rus
 
 # Copy the binary from the builder stage
 COPY --from=builder /app/server /app/server

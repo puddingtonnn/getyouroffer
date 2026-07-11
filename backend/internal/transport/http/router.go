@@ -23,8 +23,9 @@ import (
 // without a database; tailorH and userH may be nil (e.g. in tests, or userH
 // without a database) — their routes are then not mounted. authMiddleware
 // guards the protected user routes and is non-nil whenever userH is.
-func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler, authMiddleware func(http.Handler) http.Handler) http.Handler {
+func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler, toolsH *ToolsHandler, authMiddleware func(http.Handler) http.Handler) http.Handler {
 	r := chi.NewRouter()
+
 
 	r.Use(middleware.RequestID)
 	// middleware.RealIP is deliberately absent: it trusts spoofable
@@ -57,8 +58,16 @@ func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler, a
 		})
 	}
 
+	if toolsH != nil {
+		r.Route("/api/tools", func(r chi.Router) {
+			r.Post("/extract-text", toolsH.ExtractText)
+			r.Post("/extract-ocr", toolsH.ExtractOCR)
+		})
+	}
+
 	return r
 }
+
 
 func handleHealth(pool *pgxpool.Pool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

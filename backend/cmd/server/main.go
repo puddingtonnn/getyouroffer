@@ -75,10 +75,17 @@ func run() error {
 	if cfg.DeepSeekAPIKey == "" {
 		slog.Warn("DEEPSEEK_API_KEY is empty, /api/tailor requests will fail")
 	}
+	pdfExtractor := client.NewPDFExtractor()
+	ocrExtractor := client.NewOCRExtractor()
+
 	tailorHandler := apihttp.NewTailorHandler(service.NewTailorService(
-		client.NewPDFExtractor(),
+		pdfExtractor,
+		ocrExtractor,
 		client.NewDeepSeek(cfg.DeepSeekAPIKey, cfg.DeepSeekBaseURL),
 	))
+
+	toolsHandler := apihttp.NewToolsHandler(pdfExtractor, ocrExtractor)
+
 
 	// User auth routes are mounted only with both a database and a signing
 	// secret: we refuse to serve auth on a default/empty key, so a missing
@@ -102,7 +109,8 @@ func run() error {
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,
-		Handler: apihttp.NewRouter(pool, tailorHandler, userHandler, authMiddleware),
+		Handler: apihttp.NewRouter(pool, tailorHandler, userHandler, toolsHandler, authMiddleware),
+
 		// No WriteTimeout: /api/tailor legitimately waits ~90s on the LLM.
 		// ReadTimeout still bounds slow request bodies (multipart uploads).
 		ReadHeaderTimeout: 5 * time.Second,

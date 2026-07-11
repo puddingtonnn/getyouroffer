@@ -50,6 +50,18 @@ definitions:
       tailored_resume:
         type: string
     type: object
+  internal_transport_http.ErrorResponse:
+    description: The shared error envelope for all API errors.
+    properties:
+      error:
+        description: Error message in Russian
+        type: string
+    type: object
+  internal_transport_http.TextResponse:
+    properties:
+      text:
+        type: string
+    type: object
   internal_transport_http.authResponse:
     properties:
       token:
@@ -107,6 +119,56 @@ paths:
       summary: Tailor resume to vacancy
       tags:
       - tailor
+  /api/tools/extract-ocr:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Converts PDF to images and runs Tesseract OCR.
+      parameters:
+      - description: Resume PDF file
+        in: formData
+        name: resume
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_http.TextResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_transport_http.ErrorResponse'
+      summary: Extract text from PDF (OCR)
+      tags:
+      - tools
+  /api/tools/extract-text:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Attempts to extract text layer from PDF without OCR.
+      parameters:
+      - description: Resume PDF file
+        in: formData
+        name: resume
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_http.TextResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_transport_http.ErrorResponse'
+      summary: Extract text from PDF (Plain)
+      tags:
+      - tools
   /api/users/login:
     post:
       consumes:

@@ -1,7 +1,9 @@
 package service
 
 import (
+	"bytes"
 	"context"
+
 	"fmt"
 	"io"
 	"strings"
@@ -23,13 +25,18 @@ type ResumeTailor interface {
 
 // TailorService orchestrates the resume tailoring flow through the ports above.
 type TailorService struct {
-	extractor ResumeExtractor
-	tailor    ResumeTailor
+	extractor    ResumeExtractor
+	ocrExtractor ResumeExtractor
+	tailor       ResumeTailor
 }
 
 // NewTailorService wires the ports into a TailorService.
-func NewTailorService(extractor ResumeExtractor, tailor ResumeTailor) *TailorService {
-	return &TailorService{extractor: extractor, tailor: tailor}
+func NewTailorService(extractor ResumeExtractor, ocrExtractor ResumeExtractor, tailor ResumeTailor) *TailorService {
+	return &TailorService{
+		extractor:    extractor,
+		ocrExtractor: ocrExtractor,
+		tailor:       tailor,
+	}
 }
 
 // Tailor extracts text from the resume PDF and asks the LLM to tailor it to
@@ -39,11 +46,31 @@ func (s *TailorService) Tailor(ctx context.Context, pdf io.Reader, vacancy strin
 		return nil, models.ErrEmptyInput
 	}
 
-	resume, err := s.extractor.Extract(pdf)
+	// We need to read the PDF into memory because we might need to read it twice
+	// (once for normal extraction, once for OCR).
+	data, err := io.ReadAll(pdf)
 	if err != nil {
-		return nil, fmt.Errorf("extracting resume text: %w", err)
+		return nil, fmt.Errorf("reading upload: %w", err)
 	}
-	if strings.TrimSpace(resume) == "" {
+
+	// 1. Try normal extraction
+	resume, err := s.extractor.Extract(bytes.NewReader(data))
+
+	// BDD: "если текста мало, допустим 10-20 символов, то пытаемся прогнать через OCR"
+	if err != nil || len(strings.TrimSpace(resume)) < 20 {
+		// 2. Try OCR extraction
+		ocrResume, ocrErr := s.ocrExtractor.Extract(bytes.NewReader(data))
+		if ocrErr != nil {
+			// If normal failed and OCR failed, return original error or unreadable
+			if err != nil {
+				return nil, fmt.Errorf("extracting resume text (normal failed: %v, ocr failed: %v)", err, ocrErr)
+			}
+			return nil, models.ErrUnreadablePDF
+		}
+		resume = ocrResume
+	}
+
+	if len(strings.TrimSpace(resume)) < 20 {
 		return nil, models.ErrUnreadablePDF
 	}
 
@@ -54,3 +81,4 @@ func (s *TailorService) Tailor(ctx context.Context, pdf io.Reader, vacancy strin
 	result.Normalize()
 	return result, nil
 }
+

@@ -54,6 +54,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/tools/extract-ocr": {
+            "post": {
+                "description": "Converts PDF to images and runs Tesseract OCR.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tools"
+                ],
+                "summary": "Extract text from PDF (OCR)",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Resume PDF file",
+                        "name": "resume",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_http.TextResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tools/extract-text": {
+            "post": {
+                "description": "Attempts to extract text layer from PDF without OCR.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tools"
+                ],
+                "summary": "Extract text from PDF (Plain)",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Resume PDF file",
+                        "name": "resume",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_http.TextResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/users/login": {
             "post": {
                 "description": "Authenticate user and return JWT",
@@ -222,6 +298,24 @@ const docTemplate = `{
                     }
                 },
                 "tailored_resume": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_http.ErrorResponse": {
+            "description": "The shared error envelope for all API errors.",
+            "type": "object",
+            "properties": {
+                "error": {
+                    "description": "Error message in Russian",
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_http.TextResponse": {
+            "type": "object",
+            "properties": {
+                "text": {
                     "type": "string"
                 }
             }

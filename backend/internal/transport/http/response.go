@@ -20,5 +20,13 @@ func WriteJSON(w http.ResponseWriter, status int, v any) {
 // WriteError sends the shared error envelope. msg is user-facing (Russian);
 // never put internal error details in it.
 func WriteError(w http.ResponseWriter, status int, msg string) {
-	WriteJSON(w, status, map[string]string{"error": msg})
+	WriteJSON(w, status, ErrorResponse{Error: msg})
 }
+
+// ErrorResponse is the shared error envelope for all API errors.
+// @Description The shared error envelope for all API errors.
+type ErrorResponse struct {
+	// Error message in Russian
+	Error string `json:"error"`
+}
+
