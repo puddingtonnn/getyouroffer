@@ -77,18 +77,25 @@ func run() error {
 	}
 	pdfExtractor := client.NewPDFExtractor()
 	ocrExtractor := client.NewOCRExtractor()
+	deepSeek := client.NewDeepSeek(cfg.DeepSeekAPIKey, cfg.DeepSeekBaseURL)
+
+	var trackerRepo service.TrackerRepo
+	if pool != nil {
+		trackerRepo = repository.NewTrackerRepository(pool)
+	}
 
 	tailorHandler := apihttp.NewTailorHandler(service.NewTailorService(
 		pdfExtractor,
 		ocrExtractor,
-		client.NewDeepSeek(cfg.DeepSeekAPIKey, cfg.DeepSeekBaseURL),
+		deepSeek,
+		trackerRepo,
 	))
 
 	toolsHandler := apihttp.NewToolsHandler(pdfExtractor, ocrExtractor)
 
 	var trackerHandler *apihttp.TrackerHandler
-	if pool != nil {
-		trackerHandler = apihttp.NewTrackerHandler(service.NewTrackerService(repository.NewTrackerRepository(pool)))
+	if trackerRepo != nil {
+		trackerHandler = apihttp.NewTrackerHandler(service.NewTrackerService(trackerRepo))
 	}
 
 

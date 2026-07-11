@@ -276,6 +276,11 @@ paths:
         name: vacancy
         required: true
         type: string
+      - description: Vacancy ID (UUID)
+        in: formData
+        name: vacancy_id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -283,6 +288,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Result'
+      security:
+      - ApiKeyAuth: []
       summary: Tailor resume to vacancy
       tags:
       - tailor

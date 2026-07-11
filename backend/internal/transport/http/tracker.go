@@ -32,7 +32,7 @@ func NewTrackerHandler(service trackerService) *TrackerHandler {
 }
 
 func getUserID(r *http.Request) (uuid.UUID, error) {
-	idStr, ok := r.Context().Value(userIDKey).(string)
+	idStr, ok := r.Context().Value(UserIDKey).(string)
 	if !ok {
 		return uuid.Nil, errors.New("unauthorized")
 	}

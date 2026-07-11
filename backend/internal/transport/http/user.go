@@ -137,7 +137,8 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Router /api/users/me [get]
 func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
-	userIDStr, ok := r.Context().Value(userIDKey).(string)
+	userIDStr, ok := r.Context().Value(UserIDKey).(string)
+
 	if !ok {
 		WriteError(w, http.StatusUnauthorized, "unauthorized")
 		return

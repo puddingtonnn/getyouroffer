@@ -102,6 +102,11 @@ const docTemplate = `{
         },
         "/api/tailor": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Extracts text from a PDF resume, analyzes it against a vacancy text using LLM, and returns a tailored resume, cover letter, and match analysis.",
                 "consumes": [
                     "multipart/form-data"
@@ -125,6 +130,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Vacancy text (max 50KB)",
                         "name": "vacancy",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vacancy ID (UUID)",
+                        "name": "vacancy_id",
                         "in": "formData",
                         "required": true
                     }

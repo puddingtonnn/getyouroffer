@@ -10,8 +10,10 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/puddingtonnn/getyouroffer/backend/internal/models"
 )
+
 
 const (
 	// maxUploadBytes bounds the whole request body via http.MaxBytesReader;
@@ -25,8 +27,9 @@ const (
 // tailorService is the port the handler consumes. Declared here (consumer
 // side) so delivery depends on an abstraction, not the concrete use case.
 type tailorService interface {
-	Tailor(ctx context.Context, pdf io.Reader, vacancy string) (*models.Result, error)
+	Tailor(ctx context.Context, userID uuid.UUID, vacancyID uuid.UUID, pdf io.Reader, vacancy string) (*models.Result, error)
 }
+
 
 // TailorHandler serves POST /api/tailor.
 type TailorHandler struct {
@@ -46,11 +49,23 @@ func NewTailorHandler(service tailorService) *TailorHandler {
 // @Tags			tailor
 // @Accept			multipart/form-data
 // @Produce		json
-// @Param			resume	formData	file	true	"Resume PDF file (max 10MB)"
-// @Param			vacancy	formData	string	true	"Vacancy text (max 50KB)"
-// @Success		200		{object}	models.Result
+// @Param			resume		formData	file	true	"Resume PDF file (max 10MB)"
+// @Param			vacancy		formData	string	true	"Vacancy text (max 50KB)"
+// @Param			vacancy_id	formData	string	true	"Vacancy ID (UUID)"
+// @Success		200			{object}	models.Result
+// @Security ApiKeyAuth
 // @Router			/api/tailor [post]
 func (h *TailorHandler) Tailor(w http.ResponseWriter, r *http.Request) {
+	userIDStr, ok := r.Context().Value(UserIDKey).(string)
+	if !ok {
+		WriteError(w, http.StatusUnauthorized, "Пользователь не авторизован.")
+		return
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		WriteError(w, http.StatusUnauthorized, "Некорректный ID пользователя.")
+		return
+	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
 
@@ -63,7 +78,15 @@ func (h *TailorHandler) Tailor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	vacancyIDStr := r.FormValue("vacancy_id")
+	vacancyID, err := uuid.Parse(vacancyIDStr)
+	if err != nil {
+		WriteError(w, http.StatusBadRequest, "Некорректный ID вакансии.")
+		return
+	}
+
 	file, _, err := r.FormFile("resume")
+
 	if err != nil {
 		WriteError(w, http.StatusBadRequest, "Прикрепите файл резюме в формате PDF.")
 		return
@@ -76,7 +99,8 @@ func (h *TailorHandler) Tailor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.service.Tailor(r.Context(), file, vacancy)
+	result, err := h.service.Tailor(r.Context(), userID, vacancyID, file, vacancy)
+
 	if err != nil {
 		handleServiceError(w, err)
 		return

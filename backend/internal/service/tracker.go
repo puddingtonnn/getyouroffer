@@ -20,6 +20,10 @@ type TrackerRepo interface {
 	GetResume(ctx context.Context, id uuid.UUID) (*models.Resume, error)
 	DeleteResume(ctx context.Context, id, userID uuid.UUID) error
 
+	// New methods for Tailor flow
+	CreateResume(ctx context.Context, userID, vacancyID uuid.UUID, text string) (uuid.UUID, error)
+	CreateTailoredResume(ctx context.Context, resumeID uuid.UUID, result *models.Result) (uuid.UUID, error)
+
 	// Tailored Resumes (internal use via Resume)
 	GetTailoredResumeByResumeID(ctx context.Context, resumeID uuid.UUID) (*models.TailoredResume, error)
 }

@@ -72,7 +72,7 @@ func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler, t
 		// Throttle: each tailor request pins the upload in memory and holds a
 		// paid LLM call for up to ~90s, so cap concurrent work until real
 		// auth/quotas land.
-		r.With(middleware.Throttle(4)).Post("/api/tailor", tailorH.Tailor)
+		r.With(authMiddleware, middleware.Throttle(4)).Post("/api/tailor", tailorH.Tailor)
 	}
 
 	if userH != nil {

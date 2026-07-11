@@ -178,3 +178,29 @@ func (r *TrackerRepository) DeleteResume(ctx context.Context, id, userID uuid.UU
 	}
 	return nil
 }
+
+func (r *TrackerRepository) CreateResume(ctx context.Context, userID, vacancyID uuid.UUID, text string) (uuid.UUID, error) {
+	id := uuid.New()
+	const query = `
+		INSERT INTO resumes (id, user_id, vacancy_id, text)
+		VALUES ($1, $2, $3, $4)`
+
+	_, err := r.pool.Exec(ctx, query, id, userID, vacancyID, text)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return id, nil
+}
+
+func (r *TrackerRepository) CreateTailoredResume(ctx context.Context, resumeID uuid.UUID, result *models.Result) (uuid.UUID, error) {
+	id := uuid.New()
+	const query = `
+		INSERT INTO tailored_resumes (id, resume_id, result)
+		VALUES ($1, $2, $3)`
+
+	_, err := r.pool.Exec(ctx, query, id, resumeID, result)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return id, nil
+}

@@ -8,8 +8,10 @@ import (
 	"io"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/puddingtonnn/getyouroffer/backend/internal/models"
 )
+
 
 // ResumeExtractor turns an uploaded resume file into plain text. Declared here
 // (consumer side); the PDF adapter in package client implements it.
@@ -28,20 +30,22 @@ type TailorService struct {
 	extractor    ResumeExtractor
 	ocrExtractor ResumeExtractor
 	tailor       ResumeTailor
+	trackerRepo  TrackerRepo
 }
 
 // NewTailorService wires the ports into a TailorService.
-func NewTailorService(extractor ResumeExtractor, ocrExtractor ResumeExtractor, tailor ResumeTailor) *TailorService {
+func NewTailorService(extractor ResumeExtractor, ocrExtractor ResumeExtractor, tailor ResumeTailor, trackerRepo TrackerRepo) *TailorService {
 	return &TailorService{
 		extractor:    extractor,
 		ocrExtractor: ocrExtractor,
 		tailor:       tailor,
+		trackerRepo:  trackerRepo,
 	}
 }
 
 // Tailor extracts text from the resume PDF and asks the LLM to tailor it to
 // the vacancy. Content is never logged.
-func (s *TailorService) Tailor(ctx context.Context, pdf io.Reader, vacancy string) (*models.Result, error) {
+func (s *TailorService) Tailor(ctx context.Context, userID uuid.UUID, vacancyID uuid.UUID, pdf io.Reader, vacancy string) (*models.Result, error) {
 	if pdf == nil || strings.TrimSpace(vacancy) == "" {
 		return nil, models.ErrEmptyInput
 	}
@@ -74,11 +78,27 @@ func (s *TailorService) Tailor(ctx context.Context, pdf io.Reader, vacancy strin
 		return nil, models.ErrUnreadablePDF
 	}
 
+	// 3. Save extracted resume to DB
+	resumeID, err := s.trackerRepo.CreateResume(ctx, userID, vacancyID, resume)
+	if err != nil {
+		return nil, fmt.Errorf("saving resume to tracker: %w", err)
+	}
+
+	// 4. Call LLM for tailoring
 	result, err := s.tailor.Tailor(ctx, resume, vacancy)
 	if err != nil {
 		return nil, fmt.Errorf("tailoring resume: %w", err)
 	}
 	result.Normalize()
+
+	// 5. Save tailored result to DB
+	_, err = s.trackerRepo.CreateTailoredResume(ctx, resumeID, result)
+	if err != nil {
+		// We don't fail the whole request if saving the result fails,
+		// but we log it.
+		fmt.Printf("warning: failed to save tailored result: %v\n", err)
+	}
+
 	return result, nil
 }
 
