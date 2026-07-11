@@ -1,6 +1,6 @@
-// User feature: HTTP handlers, plus
-// JWT issuance and the auth middleware. It depends on the use case only
-// through a locally declared interface (consumer side).
+// User feature: HTTP handlers for the /api/users routes. It depends on the use
+// case and on token issuance only through locally declared interfaces
+// (consumer side); JWT signing and verification live in auth.go.
 package http
 
 import (
@@ -8,16 +8,11 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
 	"github.com/puddingtonnn/getyouroffer/backend/internal/models"
 )
-
-var jwtKey = []byte("temporary_secret_key") // In production, use config
 
 // userService is the port the handlers consume. Declared here (consumer side)
 // so delivery depends on an abstraction, not the concrete use case.
@@ -27,14 +22,21 @@ type userService interface {
 	GetProfile(ctx context.Context, userID uuid.UUID) (*models.Profile, error)
 }
 
+// tokenIssuer mints an auth token for a user id. Declared consumer-side so the
+// handler depends on an abstraction; *TokenManager (auth.go) implements it.
+type tokenIssuer interface {
+	Generate(userID string) (string, error)
+}
+
 // UserHandler serves the /api/users routes.
 type UserHandler struct {
 	service userService
+	tokens  tokenIssuer
 }
 
-// NewUserHandler wires the service into the UserHandler.
-func NewUserHandler(service userService) *UserHandler {
-	return &UserHandler{service: service}
+// NewUserHandler wires the service and token issuer into the UserHandler.
+func NewUserHandler(service userService, tokens tokenIssuer) *UserHandler {
+	return &UserHandler{service: service, tokens: tokens}
 }
 
 type registerRequest struct {
@@ -71,15 +73,20 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.service.Register(r.Context(), req.Email, req.Password, req.FirstName, req.LastName)
 	if err != nil {
-		if errors.Is(err, models.ErrEmailTaken) {
+		switch {
+		case errors.Is(err, models.ErrInvalidEmail):
+			WriteError(w, http.StatusBadRequest, "invalid email")
+		case errors.Is(err, models.ErrWeakPassword):
+			WriteError(w, http.StatusBadRequest, "password must be 8 to 72 characters")
+		case errors.Is(err, models.ErrEmailTaken):
 			WriteError(w, http.StatusConflict, "could not create user")
-			return
+		default:
+			WriteError(w, http.StatusInternalServerError, "internal error")
 		}
-		WriteError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 
-	token, err := generateToken(user.ID.String())
+	token, err := h.tokens.Generate(user.ID.String())
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, "internal error")
 		return
@@ -113,7 +120,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := generateToken(user.ID.String())
+	token, err := h.tokens.Generate(user.ID.String())
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, "internal error")
 		return
@@ -153,53 +160,4 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, profile)
-}
-
-// contextKey is unexported so no other package can collide with our context
-// values (staticcheck SA1029).
-type contextKey string
-
-const userIDKey contextKey = "user_id"
-
-func generateToken(userID string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
-	})
-	return token.SignedString(jwtKey)
-}
-
-// AuthMiddleware validates the Bearer JWT and puts the user id into the
-// request context for GetProfile.
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			WriteError(w, http.StatusUnauthorized, "missing authorization header")
-			return
-		}
-
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			WriteError(w, http.StatusUnauthorized, "invalid authorization header")
-			return
-		}
-
-		token, err := jwt.Parse(parts[1], func(token *jwt.Token) (any, error) {
-			return jwtKey, nil
-		})
-		if err != nil || !token.Valid {
-			WriteError(w, http.StatusUnauthorized, "invalid token")
-			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			WriteError(w, http.StatusUnauthorized, "invalid token")
-			return
-		}
-		userID, _ := claims["user_id"].(string)
-		ctx := context.WithValue(r.Context(), userIDKey, userID)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
 }

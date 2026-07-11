@@ -17,6 +17,11 @@ var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	// ErrNotFound means the requested user or profile does not exist.
 	ErrNotFound = errors.New("not found")
+	// ErrInvalidEmail means the registration email is empty or malformed.
+	ErrInvalidEmail = errors.New("invalid email")
+	// ErrWeakPassword means the password fails the length policy (see the
+	// service layer for the exact bounds).
+	ErrWeakPassword = errors.New("weak password")
 
 	// --- tailor feature ---
 

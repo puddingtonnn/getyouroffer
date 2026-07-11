@@ -30,6 +30,7 @@ cd getyouroffer
 make setup            # создаст .env, поставит зависимости
 # впишите свой DEEPSEEK_API_KEY в .env
 # (опционально DEEPSEEK_BASE_URL — другой OpenAI-совместимый эндпоинт)
+# для /api/users/* задайте JWT_SECRET (напр. `openssl rand -hex 32`)
 make db-up            # поднять Postgres (нужен запущенный Docker Desktop)
 make db-migrate       # применить миграции
 make back             # терминал 1: Go API на :8090
@@ -54,5 +55,6 @@ make front            # терминал 2: Vite dev на :5173
 - **Подгонка резюме** (`POST /api/tailor`): загрузка PDF-резюме + текст
   вакансии → подогнанное резюме, анализ соответствия (совпадения и пробелы),
   ключевые слова, черновик сопроводительного письма (DeepSeek).
-- Регистрация/логин и профиль (`/api/users/*`, JWT) — требует Postgres.
+- Регистрация/логин и профиль (`/api/users/*`, JWT) — требует Postgres и
+  `JWT_SECRET` (без секрета роуты отключены).
 - Health-эндпоинт `GET /api/health` (статус БД).

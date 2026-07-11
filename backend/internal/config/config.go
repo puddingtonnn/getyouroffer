@@ -9,6 +9,7 @@ type Config struct {
 	DatabaseURL     string // DATABASE_URL; empty means "run without a database"
 	DeepSeekAPIKey  string // DEEPSEEK_API_KEY
 	DeepSeekBaseURL string // DEEPSEEK_BASE_URL, default "https://api.deepseek.com"
+	JWTSecret       string // JWT_SECRET; empty disables the /api/users/* routes
 }
 
 // Load reads the configuration from the environment.
@@ -18,6 +19,7 @@ func Load() Config {
 		DatabaseURL:     os.Getenv("DATABASE_URL"),
 		DeepSeekAPIKey:  os.Getenv("DEEPSEEK_API_KEY"),
 		DeepSeekBaseURL: envOr("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
+		JWTSecret:       os.Getenv("JWT_SECRET"),
 	}
 }
 

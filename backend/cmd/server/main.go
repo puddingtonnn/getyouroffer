@@ -80,14 +80,29 @@ func run() error {
 		client.NewDeepSeek(cfg.DeepSeekAPIKey, cfg.DeepSeekBaseURL),
 	))
 
+	// User auth routes are mounted only with both a database and a signing
+	// secret: we refuse to serve auth on a default/empty key, so a missing
+	// JWT_SECRET disables the routes (warned) instead of accepting forgeable
+	// tokens. The token manager both mints tokens and guards protected routes.
 	var userHandler *apihttp.UserHandler
-	if pool != nil {
-		userHandler = apihttp.NewUserHandler(service.NewUserService(repository.NewUserRepository(pool)))
+	var authMiddleware func(http.Handler) http.Handler
+	switch {
+	case pool == nil:
+		// No database: user routes already unavailable, nothing to warn about.
+	case cfg.JWTSecret == "":
+		slog.Warn("JWT_SECRET is empty, user auth routes are disabled")
+	default:
+		if len(cfg.JWTSecret) < 32 {
+			slog.Warn("JWT_SECRET is shorter than 32 bytes; use a long random value")
+		}
+		tokens := apihttp.NewTokenManager([]byte(cfg.JWTSecret), 24*time.Hour)
+		userHandler = apihttp.NewUserHandler(service.NewUserService(repository.NewUserRepository(pool)), tokens)
+		authMiddleware = tokens.Middleware
 	}
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,
-		Handler: apihttp.NewRouter(pool, tailorHandler, userHandler),
+		Handler: apihttp.NewRouter(pool, tailorHandler, userHandler, authMiddleware),
 		// No WriteTimeout: /api/tailor legitimately waits ~90s on the LLM.
 		// ReadTimeout still bounds slow request bodies (multipart uploads).
 		ReadHeaderTimeout: 5 * time.Second,

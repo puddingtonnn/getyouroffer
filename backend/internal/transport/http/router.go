@@ -21,8 +21,9 @@ import (
 
 // NewRouter assembles the API routes. pool may be nil when the server runs
 // without a database; tailorH and userH may be nil (e.g. in tests, or userH
-// without a database) — their routes are then not mounted.
-func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler) http.Handler {
+// without a database) — their routes are then not mounted. authMiddleware
+// guards the protected user routes and is non-nil whenever userH is.
+func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler, authMiddleware func(http.Handler) http.Handler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -52,7 +53,7 @@ func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler) h
 		r.Route("/api/users", func(r chi.Router) {
 			r.Post("/register", userH.Register)
 			r.Post("/login", userH.Login)
-			r.With(AuthMiddleware).Get("/me", userH.GetProfile)
+			r.With(authMiddleware).Get("/me", userH.GetProfile)
 		})
 	}
 
