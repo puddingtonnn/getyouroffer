@@ -120,7 +120,7 @@ getyouroffer/
         ├── pages/        # Landing, AuthPage, NewResponse, VacancyResult,
         │                 #   Tracker
         ├── App.tsx       # роутер
-        └── index.css     # дизайн-токены (@theme): палитра «Электрик»,
+        └── index.css     # дизайн-токены (@theme): палитра «Маджента»,
                           #   шрифты Oswald/Onest/Ubuntu Mono/Caveat
                           #   (self-hosted через @fontsource)
 ```

@@ -47,12 +47,25 @@ export function MenuBar({ nav = false }: { nav?: boolean }) {
             </NavLink>
           </span>
         ) : (
-          <span className="hidden gap-5.5 text-ink-soft sm:flex">
-            <span>Файл</span>
-            <span>Правка</span>
-            <span>Вид</span>
-            <span>Отклик</span>
-            <span>Справка</span>
+          <span className="hidden gap-5.5 sm:flex">
+            <a href="#how" className="text-ink-soft transition hover:text-ink">
+              Как это работает
+            </a>
+            <a href="#trust" className="text-ink-soft transition hover:text-ink">
+              Приватность
+            </a>
+            <a href="#faq" className="text-ink-soft transition hover:text-ink">
+              Вопросы
+            </a>
+            {authed ? (
+              <Link to="/app/tracker" className="text-ink-soft transition hover:text-ink">
+                Трекер
+              </Link>
+            ) : (
+              <Link to="/login" className="text-ink-soft transition hover:text-ink">
+                Войти
+              </Link>
+            )}
           </span>
         )}
       </div>
@@ -82,8 +95,11 @@ export function MenuBar({ nav = false }: { nav?: boolean }) {
           </>
         ) : (
           !nav && (
-            <Link to={authed ? '/app/new' : '/login'} className="font-semibold text-ink transition hover:text-accent">
-              {authed ? 'в приложение →' : 'Войти'}
+            <Link
+              to={authed ? '/app/new' : '/register'}
+              className="font-semibold text-ink transition hover:text-accent"
+            >
+              {authed ? 'в приложение →' : 'Регистрация →'}
             </Link>
           )
         )}

@@ -61,7 +61,7 @@ function MiniFile({ kind, badge, label }: { kind: 'in' | 'out'; badge: string; l
       <div
         className={`relative mx-auto h-[66px] w-[56px] rounded-[7px] bg-white ${
           kind === 'out'
-            ? 'border-[1.5px] border-accent shadow-[0_8px_20px_rgba(43,92,230,.2)]'
+            ? 'border-[1.5px] border-accent shadow-[0_8px_20px_rgba(194,40,122,.2)]'
             : 'border-[1.5px] border-ink/35'
         }`}
       >
@@ -138,8 +138,10 @@ export default function Landing() {
     <div className="min-h-screen">
       <MenuBar />
 
-      {/* ——— Hero desktop ——— */}
-      <Desktop className="overflow-hidden select-none xl:h-[920px]">
+      {/* One continuous desktop wallpaper for the whole page. */}
+      <Desktop>
+        {/* ——— Hero ——— */}
+        <div className="relative overflow-hidden select-none xl:h-[920px]">
         <div className="relative z-10 max-w-[600px] px-6 pt-16 sm:px-12 xl:absolute xl:top-[84px] xl:left-16 xl:px-0 xl:pt-0">
           <div className="kicker mb-5.5 inline-flex items-center gap-2 rounded-full border border-accent/35 bg-paper/70 px-3.5 py-1.75 text-accent">
             ✥ Файлы на столе можно таскать мышью
@@ -158,7 +160,9 @@ export default function Landing() {
             >
               Навести порядок — бесплатно
             </Link>
-            <span className="font-mono text-[12.5px] text-steel">3 отклика · без карты</span>
+            <span className="font-mono text-[12.5px] text-steel">
+              3 отклика · без карты · резюме не в логах
+            </span>
           </div>
         </div>
 
@@ -272,10 +276,10 @@ export default function Landing() {
             </div>
           </div>
         </Draggable>
-      </Desktop>
+        </div>
 
-      {/* ——— Windowed sections ——— */}
-      <div className="bg-gradient-to-b from-canvas-deep to-canvas to-12% pt-[70px]">
+        {/* ——— Windowed sections ——— */}
+        <div className="pt-[70px]">
         {/* How it works */}
         <div id="how" className="mx-auto mb-[78px] max-w-[1200px] px-6">
           <Window title="как_это_работает.app" right="58 сек">
@@ -402,8 +406,38 @@ export default function Landing() {
           </Window>
         </div>
 
+        {/* Trust */}
+        <div id="trust" className="mx-auto mb-[78px] max-w-[1200px] px-6">
+          <h2 className="display mb-7 text-center text-4xl">
+            Почему нам можно <span className="display-stroke">доверять.</span>
+          </h2>
+          <div className="grid gap-5 md:grid-cols-3">
+            {(
+              [
+                [
+                  'Данные при вас',
+                  'Резюме не попадает в логи и не передаётся никому, кроме модели, которая собирает ваш пакет. Удалить отклик можно в один клик — вместе с версиями резюме.',
+                ],
+                [
+                  'Разбор без лести',
+                  'Показываем не только совпадения, но и честные пробелы с советами. Вы точно знаете, что поправить до отправки, — без ложной уверенности.',
+                ],
+                [
+                  'Отправляете вы сами',
+                  'Никаких массовых рассылок и доступа к вашим аккаунтам. Каждый отклик — одна вакансия и ваше осознанное решение отправить.',
+                ],
+              ] as const
+            ).map(([title, text]) => (
+              <div key={title} className="rounded-2xl border border-ink/16 bg-paper p-6">
+                <div className="kicker mb-3 text-[11px] text-accent">✓ {title}</div>
+                <p className="font-sans text-sm/[1.6] text-ink-mute">{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* FAQ inbox */}
-        <div className="mx-auto mb-[78px] max-w-[860px] px-6">
+        <div id="faq" className="mx-auto mb-[78px] max-w-[860px] px-6">
           <Window title="Входящие — частые вопросы (3)">
             <div className="py-2.5">
               {(
@@ -518,23 +552,13 @@ export default function Landing() {
           {/* Footer */}
           <div className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-ink/14 bg-paper/85 px-6 py-3.5 text-left font-sans text-[12.5px] font-medium text-ink-mute">
             <span>© 2026 GetYourOffer</span>
-            <span className="flex gap-5.5">
-              <a href="#how" className="hover:text-ink">
-                Тарифы
-              </a>
-              <a href="#how" className="hover:text-ink">
-                Телеграм
-              </a>
-              <a href="#how" className="hover:text-ink">
-                Приватность
-              </a>
-            </span>
             <span className="font-mono text-[11.5px]">
               резюме не логируем · вечера не возвращаем — их у вас снова много
             </span>
           </div>
         </div>
-      </div>
+        </div>
+      </Desktop>
     </div>
   )
 }

@@ -63,8 +63,8 @@ make front            # терминал 2: Vite dev на :5173
 
 ## Фронтенд
 
-SPA в дизайн-системе «Афиша» (палитра «Электрик»; шрифты Oswald / Onest /
-Ubuntu Mono / Caveat, self-hosted через `@fontsource`):
+SPA в дизайн-системе «Афиша» (палитра с акцентом «Маджента»; шрифты Oswald /
+Onest / Ubuntu Mono / Caveat, self-hosted через `@fontsource`):
 
 - `/` — лендинг «рабочий стол соискателя» (файлы можно таскать мышью);
 - `/login`, `/register` — вход и регистрация (JWT в localStorage);
