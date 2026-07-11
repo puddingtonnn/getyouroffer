@@ -111,10 +111,18 @@ getyouroffer/
 │   │   ├── client/       #   внешние клиенты: DeepSeek (LLM), PDFExtractor
 │   │   └── transport/http/ # роутер, middleware, хендлеры, WriteJSON/WriteError
 │   └── migrations/       # нумерованные SQL: NNNN_name.sql
-└── frontend/             # Vite + React + TS + Tailwind v4
+└── frontend/             # Vite + React + TS + Tailwind v4 + react-router
     └── src/
-        ├── lib/api.ts    # клиент к бэкенду (/api через Vite-proxy)
-        └── App.tsx
+        ├── lib/          # api.ts (клиент к бэкенду через Vite-proxy),
+        │                 #   auth.tsx (JWT в localStorage, AuthProvider,
+        │                 #   RequireAuth), quota.ts (freemium-счётчик)
+        ├── components/   # Logo, AppHeader, StatusBadge, ScoreRing
+        ├── pages/        # Landing, AuthPage, NewResponse, VacancyResult,
+        │                 #   Tracker
+        ├── App.tsx       # роутер
+        └── index.css     # дизайн-токены (@theme): палитра «Электрик»,
+                          #   шрифты Oswald/Onest/Ubuntu Mono/Caveat
+                          #   (self-hosted через @fontsource)
 ```
 
 - Бэкенд организован **по слоям** (layer-first). Решение команды от

@@ -1,0 +1,194 @@
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import * as api from '../lib/api'
+import { Desktop, MenuBar, Window } from '../components/desktop'
+import { ScoreRing } from '../components/ScoreRing'
+import { StatusBadge } from '../components/StatusBadge'
+
+function verdict(score: number): string {
+  if (score >= 75) return 'Сильное соответствие. Закройте пробелы в письме — и отправляйте.'
+  if (score >= 50) return 'Хорошая база. Пройдитесь по пробелам, прежде чем отправлять.'
+  return 'Соответствие слабое. Посмотрите советы по пробелам — или поищите вакансию ближе к опыту.'
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <div className="kicker mb-3.5 text-[11px] text-steel">{children}</div>
+}
+
+// Result dashboard as documents on the desktop: the разбор window, the
+// resume 2.0 window and the dark cover-letter window, slightly tilted.
+export default function VacancyResult() {
+  const { id } = useParams<{ id: string }>()
+  const location = useLocation()
+  const stateResult = (location.state as { result?: api.TailorResult } | null)?.result ?? null
+
+  const [vacancy, setVacancy] = useState<api.VacancyWithResumes | null>(null)
+  const [result, setResult] = useState<api.TailorResult | null>(stateResult)
+  const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    if (!id) return
+    let cancelled = false
+    async function load() {
+      try {
+        const v = await api.getVacancy(id!)
+        if (cancelled) return
+        setVacancy(v)
+        if (stateResult) return
+        const resumes = v.resumes ?? []
+        if (resumes.length === 0) {
+          setError('У этого отклика пока нет подогнанного резюме.')
+          return
+        }
+        // Newest resume carries the latest tailored result.
+        const latest = [...resumes].sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
+        const withResult = await api.getResume(latest.id)
+        if (cancelled) return
+        if (withResult.tailored_result) {
+          setResult(api.normalizeResult(withResult.tailored_result.result))
+        } else {
+          setError('Результат подгонки для этого отклика не найден.')
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Неизвестная ошибка.')
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  async function copyLetter() {
+    if (!result) return
+    await navigator.clipboard.writeText(result.cover_letter)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <MenuBar nav />
+      <Desktop className="flex-1">
+        <div className="relative z-10 mx-auto max-w-[1360px] px-6 pt-8 pb-14 sm:px-9">
+          {error !== '' && (
+            <p className="mb-6 rounded-xl border border-file-pdf/30 bg-file-pdf/8 px-4 py-3 font-sans text-sm text-file-pdf">
+              {error}
+            </p>
+          )}
+
+          {result === null && error === '' && (
+            <p className="py-24 text-center font-mono text-sm text-steel">загружаем разбор…</p>
+          )}
+
+          {result !== null && (
+            <>
+              {/* Desktop header strip */}
+              <div className="mb-7 flex flex-wrap items-center justify-between gap-5">
+                <div className="flex items-center gap-5.5">
+                  <ScoreRing score={result.match_score} />
+                  <div>
+                    <div className="kicker mb-1.5 text-[11.5px] text-accent">Отклик · сохранён в трекере</div>
+                    <h1 className="display text-4xl">{vacancy?.name ?? 'Отклик'}</h1>
+                    <div className="mt-1 font-sans text-[13.5px] text-steel">{verdict(result.match_score)}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {vacancy && <StatusBadge status={vacancy.status} />}
+                  <Link
+                    to="/app/tracker"
+                    className="rounded-full border-[1.5px] border-ink px-5 py-3 font-sans text-sm font-semibold transition hover:bg-ink hover:text-paper"
+                  >
+                    В трекер →
+                  </Link>
+                </div>
+              </div>
+
+              <div className="grid items-start gap-6.5 lg:grid-cols-[.92fr_1.08fr]">
+                {/* Разбор window */}
+                <Window title="разбор_соответствия.pdf — Просмотр" tilt={-0.4} className="animate-popin">
+                  <div className="flex flex-col gap-5.5 px-6 py-5.5">
+                    {result.matches.length > 0 && (
+                      <div>
+                        <SectionLabel>Совпадения · {result.matches.length}</SectionLabel>
+                        <div className="flex flex-col gap-3 font-sans text-sm/[1.5]">
+                          {result.matches.map((m, i) => (
+                            <div key={i} className="flex gap-2.5">
+                              <span className="flex-none font-extrabold text-accent">✓</span>
+                              <span>
+                                <b>{m.requirement}</b> — {m.evidence}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {result.gaps.length > 0 && (
+                      <div>
+                        <SectionLabel>Пробелы · {result.gaps.length} — и что с ними делать</SectionLabel>
+                        <div className="flex flex-col gap-3.5 font-sans text-sm/[1.5]">
+                          {result.gaps.map((g, i) => (
+                            <div key={i} className="border-l-[2.5px] border-ink pl-3.5">
+                              <b>{g.requirement}</b>
+                              <span className="mt-1 block text-steel">Совет: {g.suggestion}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {result.keywords_to_add.length > 0 && (
+                      <div>
+                        <SectionLabel>Ключевые слова для ATS · {result.keywords_to_add.length}</SectionLabel>
+                        <div className="flex flex-wrap gap-2 font-sans text-[12.5px] font-semibold">
+                          {result.keywords_to_add.map((k, i) => (
+                            <span key={i} className="rounded-full border-[1.5px] border-ink px-3.5 py-1.75">
+                              {k}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Window>
+
+                {/* Documents */}
+                <div className="flex flex-col gap-6.5">
+                  <Window title="резюме_2.0.md — под вакансию" tilt={0.4} className="animate-popin">
+                    <div className="px-6 py-5 font-sans text-sm/[1.7] whitespace-pre-wrap text-ink-soft">
+                      {result.tailored_resume}
+                    </div>
+                  </Window>
+
+                  <Window
+                    title="сопроводительное_письмо.txt"
+                    right={`${result.cover_letter.length.toLocaleString('ru-RU')} знаков`}
+                    dark
+                    tilt={-0.3}
+                    className="animate-popin"
+                  >
+                    <div className="flex items-center justify-end border-b border-paper/14 px-6 py-3">
+                      <button
+                        type="button"
+                        onClick={copyLetter}
+                        className="font-mono text-xs font-bold text-accent transition hover:text-paper"
+                      >
+                        {copied ? 'СКОПИРОВАНО ✓' : 'СКОПИРОВАТЬ ↗'}
+                      </button>
+                    </div>
+                    <div className="px-6 py-5 font-sans text-[14.5px]/[1.75] whitespace-pre-wrap text-paper/85">
+                      {result.cover_letter}
+                    </div>
+                  </Window>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </Desktop>
+    </div>
+  )
+}

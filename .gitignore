@@ -39,6 +39,7 @@ frontend/dist/
 
 # local tooling
 .remember/
+.claude/
 
 # Editor/IDE
 # .idea/
