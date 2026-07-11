@@ -33,5 +33,16 @@ services:
       - DATABASE_URL=postgres://app:app@db:5432/getyouroffer?sslmode=disable
       - PORT=8090
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gyo-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+
 volumes:
   pgdata:
