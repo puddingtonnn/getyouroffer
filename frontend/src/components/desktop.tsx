@@ -20,7 +20,7 @@ export function useClock(): string {
 // MenuBar: static menu labels on the landing, real navigation in the app.
 export function MenuBar({ nav = false }: { nav?: boolean }) {
   const clock = useClock()
-  const { authed, profile, logout } = useAuth()
+  const { authed, demo, profile, logout } = useAuth()
 
   const initials =
     profile && (profile.first_name || profile.last_name)
@@ -57,9 +57,15 @@ export function MenuBar({ nav = false }: { nav?: boolean }) {
         )}
       </div>
       <div className="flex items-center gap-4.5 text-[12.5px] text-ink-soft">
-        <span className="font-mono text-xs font-semibold text-accent">
-          осталось {freeLeft()} из {FREE_LIMIT} бесплатных
-        </span>
+        {demo ? (
+          <span className="rounded-full border border-accent/40 bg-accent/8 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-accent">
+            демо без бэкенда
+          </span>
+        ) : (
+          <span className="font-mono text-xs font-semibold text-accent">
+            осталось {freeLeft()} из {FREE_LIMIT} бесплатных
+          </span>
+        )}
         <span className="max-sm:hidden">RU</span>
         <span className="tabular-nums max-sm:hidden">{clock}</span>
         {nav && authed ? (

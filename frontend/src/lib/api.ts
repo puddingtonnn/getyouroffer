@@ -1,6 +1,8 @@
 // Thin client for the Go backend. In dev, /api requests are proxied by Vite
 // to http://localhost:8090 (see vite.config.ts). All thrown errors carry
 // Russian, user-facing messages so the UI can render them directly.
+import * as demo from './demo'
+
 const API_BASE = '/api'
 
 const TOKEN_KEY = 'gyo_token'
@@ -140,32 +142,39 @@ export async function login(email: string, password: string): Promise<string> {
 }
 
 export function getProfile(): Promise<Profile> {
+  if (demo.isDemoMode()) return Promise.resolve(demo.demoProfile)
   return request<Profile>('/users/me')
 }
 
-// --- Tracker ---
+// --- Tracker (demo mode swaps in the offline seeded store) ---
 
 export function createVacancy(name: string, description: string, source: string): Promise<Vacancy> {
+  if (demo.isDemoMode()) return demo.createVacancy(name, description, source)
   return request<Vacancy>('/vacancies/', jsonInit('POST', { name, description, source }))
 }
 
 export function listVacancies(): Promise<VacancyWithResumes[]> {
+  if (demo.isDemoMode()) return demo.listVacancies()
   return request<VacancyWithResumes[]>('/vacancies/')
 }
 
 export function getVacancy(id: string): Promise<VacancyWithResumes> {
+  if (demo.isDemoMode()) return demo.getVacancy(id)
   return request<VacancyWithResumes>(`/vacancies/${id}`)
 }
 
 export function updateVacancyStatus(id: string, status: VacancyStatus): Promise<Vacancy> {
+  if (demo.isDemoMode()) return demo.updateVacancyStatus(id, status)
   return request<Vacancy>(`/vacancies/${id}`, jsonInit('PATCH', { status }))
 }
 
 export function deleteVacancy(id: string): Promise<void> {
+  if (demo.isDemoMode()) return demo.deleteVacancy(id)
   return request<void>(`/vacancies/${id}`, { method: 'DELETE' })
 }
 
 export function getResume(id: string): Promise<ResumeWithResult> {
+  if (demo.isDemoMode()) return demo.getResume(id)
   return request<ResumeWithResult>(`/resumes/${id}`)
 }
 
@@ -178,6 +187,8 @@ export async function tailorResume(
   vacancy: string,
   vacancyID: string,
 ): Promise<TailorResult> {
+  if (demo.isDemoMode()) return demo.tailorResume(file, vacancy, vacancyID)
+
   const form = new FormData()
   form.append('resume', file)
   form.append('vacancy', vacancy)

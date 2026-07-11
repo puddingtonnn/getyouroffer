@@ -9,7 +9,7 @@ const inputClass =
 // Login and registration share one window-styled screen (mode via prop).
 export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const isRegister = mode === 'register'
-  const { login, register } = useAuth()
+  const { login, register, startDemo } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from ?? '/app/new'
@@ -133,6 +133,17 @@ export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
                   </>
                 )}
               </p>
+
+              <button
+                type="button"
+                onClick={() => {
+                  startDemo()
+                  navigate('/app/tracker')
+                }}
+                className="mt-1 border-t border-dashed border-ink/20 pt-3.5 text-center font-mono text-xs text-steel transition hover:text-accent"
+              >
+                бэкенд выключен? посмотреть демо →
+              </button>
             </form>
           </Window>
         </div>
