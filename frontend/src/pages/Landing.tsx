@@ -61,7 +61,7 @@ function MiniFile({ kind, badge, label }: { kind: 'in' | 'out'; badge: string; l
       <div
         className={`relative mx-auto h-[66px] w-[56px] rounded-[7px] bg-white ${
           kind === 'out'
-            ? 'border-[1.5px] border-violet shadow-[0_8px_20px_rgba(111,45,189,.2)]'
+            ? 'border-[1.5px] border-accent shadow-[0_8px_20px_rgba(194,40,122,.2)]'
             : 'border-[1.5px] border-ink/35'
         }`}
       >
@@ -70,7 +70,7 @@ function MiniFile({ kind, badge, label }: { kind: 'in' | 'out'; badge: string; l
         )}
         <span
           className={`absolute bottom-1 left-1 rounded px-1.25 py-0.5 font-mono text-[8px] font-bold text-white ${
-            kind === 'out' ? 'bg-violet' : badge === 'PDF' ? 'bg-file-pdf' : 'bg-ink-soft'
+            kind === 'out' ? 'bg-accent' : badge === 'PDF' ? 'bg-file-pdf' : 'bg-ink-soft'
           }`}
         >
           {badge}
@@ -114,6 +114,7 @@ function DockIcon({ to, title, children }: { to: string; title: string; children
     <Link
       to={to}
       title={title}
+      aria-label={title}
       className="inline-block transition duration-200 hover:-translate-y-1.5 hover:scale-115"
     >
       {children}
@@ -252,7 +253,7 @@ export default function Landing() {
           <Notification
             delay={2.4}
             icon={
-              <span className="flex h-8.5 w-8.5 flex-none items-center justify-center rounded-[9px] bg-violet font-sans text-[15px] font-extrabold text-accent-ink">
+              <span className="flex h-8.5 w-8.5 flex-none items-center justify-center rounded-[9px] bg-accent font-sans text-[15px] font-extrabold text-accent-ink">
                 Н
               </span>
             }
@@ -528,9 +529,9 @@ export default function Landing() {
                 <LogoMark size={52} />
               </DockIcon>
               <DockIcon to={cta} title="Как это работает">
-                <span className="flex h-13 w-13 items-center justify-center rounded-[14px] bg-violet">
+                <span className="flex h-13 w-13 items-center justify-center rounded-[14px] bg-accent">
                   <span className="relative h-5 w-7 overflow-hidden rounded bg-accent-ink">
-                    <span className="absolute top-1 left-1/2 h-0 w-0 -translate-x-1/2 border-t-[11px] border-r-[7px] border-l-[7px] border-t-violet border-r-transparent border-l-transparent rotate-180" />
+                    <span className="absolute top-1 left-1/2 h-0 w-0 -translate-x-1/2 border-t-[11px] border-r-[7px] border-l-[7px] border-t-accent border-r-transparent border-l-transparent rotate-180" />
                   </span>
                 </span>
               </DockIcon>

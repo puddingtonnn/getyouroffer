@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import * as api from '../lib/api'
+import { usePageTitle } from '../lib/usePageTitle'
 import { Desktop, Draggable, MenuBar, Sticker, Window } from '../components/desktop'
 import { STATUS_LABELS, STATUS_ORDER } from '../components/StatusBadge'
 
@@ -36,6 +37,8 @@ function FunnelBar({ label, value, max, accent, delay }: { label: string; value:
 // Tracker as a desktop: the registry window with a sidebar of filters, the
 // dark funnel window and a follow-up sticker pinned to the desk.
 export default function Tracker() {
+  usePageTitle('Трекер')
+
   const [vacancies, setVacancies] = useState<api.VacancyWithResumes[]>([])
   const [filter, setFilter] = useState<Filter>('all')
   const [loaded, setLoaded] = useState(false)
@@ -180,11 +183,27 @@ export default function Tracker() {
                   {!loaded && <p className="px-5 py-10 text-center font-mono text-sm text-steel">загружаем…</p>}
 
                   {loaded && visible.length === 0 && (
-                    <p className="px-5 py-10 text-center font-sans text-sm text-steel">
-                      {vacancies.length === 0
-                        ? 'Здесь появятся ваши отклики — начните с первого.'
-                        : 'Под этот фильтр ничего не попадает.'}
-                    </p>
+                    <div className="px-5 py-10 text-center">
+                      {vacancies.length === 0 ? (
+                        <>
+                          <p className="font-sans text-sm text-steel">
+                            Здесь появятся ваши отклики. Первый занимает около минуты —
+                            понадобится текст вакансии и резюме в PDF.
+                          </p>
+                          <Link
+                            to="/app/new?example=1"
+                            className="mt-4 inline-block rounded-xl bg-accent px-5 py-3 font-sans text-sm font-bold text-accent-ink shadow-cta transition hover:brightness-110"
+                          >
+                            Попробовать на примере вакансии →
+                          </Link>
+                          <p className="mt-2.5 font-mono text-[11px] text-steel">
+                            подставим текст за вас — своё резюме всё же понадобится
+                          </p>
+                        </>
+                      ) : (
+                        <p className="font-sans text-sm text-steel">Под этот фильтр ничего не попадает.</p>
+                      )}
+                    </div>
                   )}
 
                   {visible.map((v) => (
@@ -213,6 +232,7 @@ export default function Tracker() {
                       </span>
                       <select
                         value={v.status}
+                        aria-label={`Статус отклика «${v.name}»`}
                         onChange={(e) => changeStatus(v.id, e.target.value as api.VacancyStatus)}
                         className={`w-fit cursor-pointer appearance-none rounded-full px-2.5 py-0.75 font-sans text-[10.5px] font-bold focus:outline-none ${statusSelectStyle(v.status)}`}
                       >
@@ -234,6 +254,7 @@ export default function Tracker() {
                           type="button"
                           onClick={() => remove(v.id, v.name)}
                           title="Удалить"
+                          aria-label={`Удалить отклик «${v.name}»`}
                           className="font-sans text-[12px] font-semibold text-steel transition hover:text-file-pdf"
                         >
                           ✕

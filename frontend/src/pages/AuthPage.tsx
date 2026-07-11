@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
+import { usePageTitle } from '../lib/usePageTitle'
 import { Desktop, MenuBar, Window } from '../components/desktop'
 
 const inputClass =
@@ -9,6 +10,7 @@ const inputClass =
 // Login and registration share one window-styled screen (mode via prop).
 export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const isRegister = mode === 'register'
+  usePageTitle(isRegister ? 'Регистрация' : 'Вход')
   const { login, register, startDemo } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()

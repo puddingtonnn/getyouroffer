@@ -1,9 +1,23 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
+import remarkBreaks from 'remark-breaks'
+import remarkGfm from 'remark-gfm'
 import * as api from '../lib/api'
-import { Desktop, MenuBar, Window } from '../components/desktop'
+import { usePageTitle } from '../lib/usePageTitle'
+import { Desktop, DeskFile, Draggable, MenuBar, Window } from '../components/desktop'
 import { ScoreRing } from '../components/ScoreRing'
 import { StatusBadge } from '../components/StatusBadge'
+
+// The LLM contract allows markdown in tailored_resume / cover_letter;
+// remark-breaks keeps single newlines as line breaks (plain-text answers).
+function Markdown({ children }: { children: string }) {
+  return (
+    <div className="md">
+      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{children}</ReactMarkdown>
+    </div>
+  )
+}
 
 function verdict(score: number): string {
   if (score >= 75) return 'Сильное соответствие. Закройте пробелы в письме — и отправляйте.'
@@ -82,6 +96,8 @@ export default function VacancyResult() {
   const [result, setResult] = useState<api.TailorResult | null>(stateResult)
   const [error, setError] = useState('')
 
+  usePageTitle(vacancy?.name ?? 'Отклик')
+
   useEffect(() => {
     if (!id) return
     let cancelled = false
@@ -120,6 +136,28 @@ export default function VacancyResult() {
     <div className="flex min-h-screen flex-col">
       <MenuBar nav />
       <Desktop className="flex-1">
+        {/* The result documents also live on the desk: drag them around,
+            double-click to download. */}
+        {result !== null && (
+          <>
+            <Draggable className="bottom-6 left-5 z-[5] hidden lg:block">
+              <div
+                onDoubleClick={() => downloadText('резюме_2.0.txt', result.tailored_resume)}
+                title="двойной клик — скачать"
+              >
+                <DeskFile kind="PDF" tilt={-4} highlight name={<>резюме_2.0.txt</>} />
+              </div>
+            </Draggable>
+            <Draggable className="bottom-9 left-36 z-[5] hidden lg:block">
+              <div
+                onDoubleClick={() => downloadText('сопроводительное_письмо.txt', result.cover_letter)}
+                title="двойной клик — скачать"
+              >
+                <DeskFile kind="TXT" tilt={5} name={<>сопроводительное_<br />письмо.txt</>} />
+              </div>
+            </Draggable>
+          </>
+        )}
         <div className="relative z-10 mx-auto max-w-[1360px] px-6 pt-8 pb-14 sm:px-9">
           {error !== '' && (
             <p className="mb-6 rounded-xl border border-file-pdf/30 bg-file-pdf/8 px-4 py-3 font-sans text-sm text-file-pdf">
@@ -207,8 +245,8 @@ export default function VacancyResult() {
                 <div className="flex flex-col gap-6.5">
                   <Window title="резюме_2.0.md — под вакансию" tilt={0.4} className="animate-popin">
                     <DocActions text={result.tailored_resume} filename="резюме_2.0.txt" />
-                    <div className="px-6 py-5 font-sans text-sm/[1.7] whitespace-pre-wrap text-ink-soft">
-                      {result.tailored_resume}
+                    <div className="px-6 py-5 font-sans text-sm/[1.7] text-ink-soft">
+                      <Markdown>{result.tailored_resume}</Markdown>
                     </div>
                   </Window>
 
@@ -220,8 +258,8 @@ export default function VacancyResult() {
                     className="animate-popin"
                   >
                     <DocActions text={result.cover_letter} filename="сопроводительное_письмо.txt" dark />
-                    <div className="px-6 py-5 font-sans text-[14.5px]/[1.75] whitespace-pre-wrap text-paper/85">
-                      {result.cover_letter}
+                    <div className="px-6 py-5 font-sans text-[14.5px]/[1.75] text-paper/85">
+                      <Markdown>{result.cover_letter}</Markdown>
                     </div>
                   </Window>
                 </div>

@@ -1,11 +1,29 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import * as api from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { usePageTitle } from '../lib/usePageTitle'
 import { consumeFree, freeLeft } from '../lib/quota'
 import { takeStashedResume } from '../lib/fileStash'
 import { Desktop, DeskFile, Draggable, MenuBar, Window } from '../components/desktop'
 import { LogoMark } from '../components/Logo'
+
+// Realistic sample vacancy for first-run onboarding (also linked from the
+// tracker's empty state via ?example=1).
+export const EXAMPLE_NAME = 'Продуктовый аналитик · «Нейра»'
+export const EXAMPLE_VACANCY = `Продуктовый аналитик — «Нейра»
+Москва · гибрид · команда роста
+
+Ищем аналитика, который превращает данные в решения, а не в отчёты ради отчётов.
+
+Ожидаем:
+— уверенный SQL и Python;
+— опыт A/B-тестирования: дизайн экспериментов, критерии остановки;
+— понимание юнит-экономики и продуктовых метрик (retention, LTV, конверсия воронки).
+
+Будет плюсом: ClickHouse, английский от B2, опыт в маркетплейсах.
+
+Задачи: эксперименты и когортный анализ, метрики роста, дашборды для команды, участие в discovery.`
 
 const PROGRESS_STAGES = [
   'извлекаем текст из PDF…',
@@ -31,7 +49,11 @@ function ProgressOverlay() {
   }, [])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-6 backdrop-blur-sm">
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-6 backdrop-blur-sm"
+    >
       <div className="w-full max-w-[420px] animate-popin">
         <Window title="собираем_отклик.app" right="≈60 сек">
           <div className="p-7 text-center">
@@ -63,15 +85,22 @@ export default function NewResponse() {
   const navigate = useNavigate()
   const fileInput = useRef<HTMLInputElement>(null)
   const { demo } = useAuth()
+  const [searchParams] = useSearchParams()
+  const withExample = searchParams.get('example') === '1'
 
-  const [name, setName] = useState('')
-  const [vacancy, setVacancy] = useState('')
+  usePageTitle('Новый отклик')
+
+  const [name, setName] = useState(withExample ? EXAMPLE_NAME : '')
+  const [vacancy, setVacancy] = useState(withExample ? EXAMPLE_VACANCY : '')
   // A resume dropped on the landing hero window lands here already attached.
   const [file, setFile] = useState<File | null>(() => takeStashedResume())
   const [dragOver, setDragOver] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [paywallNote, setPaywallNote] = useState(false)
+  // Set once the vacancy row exists, so a retry after a tailor failure
+  // reuses it instead of piling up duplicate drafts in the tracker.
+  const createdVacancyID = useRef<string | null>(null)
 
   // Freemium v1: a localStorage counter, no billing. Demo mode is exempt.
   const quotaExhausted = !demo && freeLeft() === 0
@@ -96,12 +125,20 @@ export default function NewResponse() {
     setLoading(true)
     setError('')
     try {
-      const created = await api.createVacancy(name.trim(), vacancy, '')
-      const result = await api.tailorResume(file, vacancy, created.id)
+      if (createdVacancyID.current === null) {
+        const created = await api.createVacancy(name.trim(), vacancy, '')
+        createdVacancyID.current = created.id
+      }
+      const result = await api.tailorResume(file, vacancy, createdVacancyID.current)
       if (!demo) consumeFree()
-      navigate(`/app/vacancies/${created.id}`, { state: { result } })
+      navigate(`/app/vacancies/${createdVacancyID.current}`, { state: { result } })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка.')
+      const message = err instanceof Error ? err.message : 'Неизвестная ошибка.'
+      setError(
+        createdVacancyID.current !== null
+          ? `${message} Черновик уже сохранён в трекере — нажмите «Собрать отклик» ещё раз, результат допишется туда же.`
+          : message,
+      )
       setLoading(false)
     }
   }
@@ -111,16 +148,27 @@ export default function NewResponse() {
       <MenuBar nav />
       {loading && <ProgressOverlay />}
       <Desktop className="flex-1">
-        {/* Desk props */}
-        <Draggable className="top-[120px] left-[3%] z-0 max-xl:hidden">
-          <DeskFile kind="PDF" tilt={-6} name={<>резюме_ФИНАЛ.pdf</>} />
-        </Draggable>
-        <Draggable className="top-[420px] left-[6%] z-0 max-xl:hidden">
-          <DeskFile kind="XLSX" tilt={4} name={<>отклики_учёт_<br />АКТУАЛЬНАЯ.xlsx</>} />
-        </Draggable>
-        <Draggable className="top-[240px] right-[4%] z-0 max-xl:hidden">
-          <DeskFile kind="PNG" tilt={5} name={<>скрин_вакансии_<br />не_потерять.png</>} />
-        </Draggable>
+        {/* The desk mirrors the form: your attached files appear here.
+            Empty desk = nothing attached yet. */}
+        {file && (
+          <Draggable className="top-[140px] left-[2%] z-[5] hidden xl:block">
+            <DeskFile
+              kind="PDF"
+              tilt={-5}
+              highlight
+              name={<>{file.name.length > 26 ? `${file.name.slice(0, 24)}…` : file.name}</>}
+            />
+          </Draggable>
+        )}
+        {vacancy.trim() !== '' && (
+          <Draggable className="top-[340px] left-[3.5%] z-[5] hidden xl:block">
+            <DeskFile
+              kind="TXT"
+              tilt={4}
+              name={<>{name.trim() !== '' ? `${name.trim().slice(0, 22)}…` : 'вакансия'}.txt</>}
+            />
+          </Draggable>
+        )}
 
         <div className="relative z-10 mx-auto max-w-[1100px] px-6 pt-10 pb-14 sm:px-9">
           <Window title="GetYourOffer — новый отклик" right="⌘N" className="animate-popin shadow-window!">
@@ -153,7 +201,22 @@ export default function NewResponse() {
                   />
                   <div className="mt-2.5 flex justify-between font-mono text-[11px] text-steel">
                     <span>{vacancy.length.toLocaleString('ru-RU')} символов</span>
-                    {looksLikeVacancy && <span className="text-accent">✓ похоже на вакансию</span>}
+                    {looksLikeVacancy ? (
+                      <span className="text-accent">✓ похоже на вакансию</span>
+                    ) : (
+                      vacancy.trim() === '' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setName(EXAMPLE_NAME)
+                            setVacancy(EXAMPLE_VACANCY)
+                          }}
+                          className="text-accent transition hover:text-ink"
+                        >
+                          вставить пример вакансии
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
 

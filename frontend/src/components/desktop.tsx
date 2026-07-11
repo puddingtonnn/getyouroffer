@@ -150,9 +150,11 @@ export function Window({
       style={tilt !== 0 ? { transform: `rotate(${tilt}deg)` } : undefined}
     >
       <div className="flex items-center gap-2 border-b border-ink/12 bg-[#EEF0F4] px-4 py-3 text-ink">
-        <span className="h-3 w-3 rounded-full bg-accent" />
-        <span className="h-3 w-3 rounded-full bg-ink/18" />
-        <span className="h-3 w-3 rounded-full bg-ink/18" />
+        <span aria-hidden="true" className="flex gap-2">
+          <span className="h-3 w-3 rounded-full bg-accent" />
+          <span className="h-3 w-3 rounded-full bg-ink/18" />
+          <span className="h-3 w-3 rounded-full bg-ink/18" />
+        </span>
         <span className="flex-1 truncate text-center font-sans text-[12.5px] font-semibold text-ink-soft">
           {title}
         </span>

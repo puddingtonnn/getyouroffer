@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -10,5 +10,9 @@ export default defineConfig({
       // Все запросы к /api уходят на Go-бэкенд — в dev нет проблем с CORS.
       '/api': { target: 'http://localhost:8090', changeOrigin: true },
     },
+  },
+  test: {
+    // jsdom: the lib code under test touches localStorage and window.
+    environment: 'jsdom',
   },
 })
