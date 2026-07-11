@@ -9,6 +9,102 @@
     "host": "localhost:8090",
     "basePath": "/",
     "paths": {
+        "/api/resumes": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resumes"
+                ],
+                "summary": "Create a resume",
+                "parameters": [
+                    {
+                        "description": "Resume data",
+                        "name": "resume",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/resumes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resumes"
+                ],
+                "summary": "Get a resume",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Resume ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "resumes"
+                ],
+                "summary": "Delete a resume",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Resume ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
         "/api/tailor": {
             "post": {
                 "description": "Extracts text from a PDF resume, analyzes it against a vacancy text using LLM, and returns a tailored resume, cover letter, and match analysis.",
@@ -44,6 +140,102 @@
                         "schema": {
                             "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Result"
                         }
+                    }
+                }
+            }
+        },
+        "/api/tailored-resumes": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tailored-resumes"
+                ],
+                "summary": "Create a tailored resume",
+                "parameters": [
+                    {
+                        "description": "Tailored resume data",
+                        "name": "tailored_resume",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tailored-resumes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tailored-resumes"
+                ],
+                "summary": "Get a tailored resume",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tailored Resume ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "tailored-resumes"
+                ],
+                "summary": "Delete a tailored resume",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tailored Resume ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             }
@@ -216,6 +408,170 @@
                     }
                 }
             }
+        },
+        "/api/vacancies": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancies"
+                ],
+                "summary": "List vacancies",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Vacancy"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancies"
+                ],
+                "summary": "Create a vacancy",
+                "parameters": [
+                    {
+                        "description": "Vacancy data",
+                        "name": "vacancy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_http.CreateVacancyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Vacancy"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/vacancies/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancies"
+                ],
+                "summary": "Get a vacancy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vacancy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Vacancy"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "vacancies"
+                ],
+                "summary": "Delete a vacancy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vacancy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancies"
+                ],
+                "summary": "Update a vacancy status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vacancy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New status",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_http.UpdateVacancyStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Vacancy"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -296,6 +652,110 @@
                 }
             }
         },
+        "github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "vacancy_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "result": {
+                    "description": "Stores models.Result as JSONB",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "resume_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_puddingtonnn_getyouroffer_backend_internal_models.Vacancy": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.VacancyStatus"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_puddingtonnn_getyouroffer_backend_internal_models.VacancyStatus": {
+            "type": "string",
+            "enum": [
+                "draft",
+                "sent",
+                "replied",
+                "rejected",
+                "offer"
+            ],
+            "x-enum-varnames": [
+                "StatusDraft",
+                "StatusSent",
+                "StatusReplied",
+                "StatusRejected",
+                "StatusOffer"
+            ]
+        },
+        "internal_transport_http.CreateVacancyRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_transport_http.ErrorResponse": {
             "description": "The shared error envelope for all API errors.",
             "type": "object",
@@ -310,6 +770,14 @@
             "type": "object",
             "properties": {
                 "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_http.UpdateVacancyStatusRequest": {
+            "type": "object",
+            "properties": {
+                "status": {
                     "type": "string"
                 }
             }

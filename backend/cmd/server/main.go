@@ -86,6 +86,11 @@ func run() error {
 
 	toolsHandler := apihttp.NewToolsHandler(pdfExtractor, ocrExtractor)
 
+	var trackerHandler *apihttp.TrackerHandler
+	if pool != nil {
+		trackerHandler = apihttp.NewTrackerHandler(service.NewTrackerService(repository.NewTrackerRepository(pool)))
+	}
+
 
 	// User auth routes are mounted only with both a database and a signing
 	// secret: we refuse to serve auth on a default/empty key, so a missing
@@ -109,7 +114,7 @@ func run() error {
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,
-		Handler: apihttp.NewRouter(pool, tailorHandler, userHandler, toolsHandler, authMiddleware),
+		Handler: apihttp.NewRouter(pool, tailorHandler, userHandler, toolsHandler, trackerHandler, authMiddleware),
 
 		// No WriteTimeout: /api/tailor legitimately waits ~90s on the LLM.
 		// ReadTimeout still bounds slow request bodies (multipart uploads).

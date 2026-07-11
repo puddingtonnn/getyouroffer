@@ -23,7 +23,7 @@ import (
 // without a database; tailorH and userH may be nil (e.g. in tests, or userH
 // without a database) — their routes are then not mounted. authMiddleware
 // guards the protected user routes and is non-nil whenever userH is.
-func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler, toolsH *ToolsHandler, authMiddleware func(http.Handler) http.Handler) http.Handler {
+func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler, toolsH *ToolsHandler, trackerH *TrackerHandler, authMiddleware func(http.Handler) http.Handler) http.Handler {
 	r := chi.NewRouter()
 
 
@@ -39,6 +39,36 @@ func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler, t
 		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodOptions},
 		AllowedHeaders: []string{"Content-Type"},
 	}))
+
+	if toolsH != nil {
+		r.Route("/api/tools", func(r chi.Router) {
+			r.Post("/extract-text", toolsH.ExtractText)
+			r.Post("/extract-ocr", toolsH.ExtractOCR)
+		})
+	}
+
+	if trackerH != nil {
+		r.Group(func(r chi.Router) {
+			r.Use(authMiddleware)
+			r.Route("/api/vacancies", func(r chi.Router) {
+				r.Post("/", trackerH.CreateVacancy)
+				r.Get("/", trackerH.ListVacancies)
+				r.Get("/{id}", trackerH.GetVacancy)
+				r.Patch("/{id}", trackerH.UpdateVacancy)
+				r.Delete("/{id}", trackerH.DeleteVacancy)
+			})
+			r.Route("/api/resumes", func(r chi.Router) {
+				r.Post("/", trackerH.CreateResume)
+				r.Get("/{id}", trackerH.GetResume)
+				r.Delete("/{id}", trackerH.DeleteResume)
+			})
+			r.Route("/api/tailored-resumes", func(r chi.Router) {
+				r.Post("/", trackerH.CreateTailoredResume)
+				r.Get("/{id}", trackerH.GetTailoredResume)
+				r.Delete("/{id}", trackerH.DeleteTailoredResume)
+			})
+		})
+	}
 
 	r.Get("/api/health", handleHealth(pool))
 	r.Mount("/swagger", httpSwagger.WrapHandler)
@@ -58,15 +88,9 @@ func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler, t
 		})
 	}
 
-	if toolsH != nil {
-		r.Route("/api/tools", func(r chi.Router) {
-			r.Post("/extract-text", toolsH.ExtractText)
-			r.Post("/extract-ocr", toolsH.ExtractOCR)
-		})
-	}
-
 	return r
 }
+
 
 
 func handleHealth(pool *pgxpool.Pool) http.HandlerFunc {
