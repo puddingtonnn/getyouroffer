@@ -20,12 +20,12 @@ function FunnelBar({ label, value, max, accent, delay }: { label: string; value:
   return (
     <div>
       <div className="mb-1.5 flex justify-between">
-        <span className={accent ? 'font-bold text-accent' : ''}>{label}</span>
-        <b className={accent ? 'text-accent' : ''}>{value}</b>
+        <span className={accent ? 'font-bold text-gold' : ''}>{label}</span>
+        <b className={accent ? 'text-gold' : ''}>{value}</b>
       </div>
       <div className="h-2.5 rounded-[5px] bg-paper/14">
         <div
-          className={`h-2.5 rounded-[5px] ${accent ? 'bg-accent' : 'bg-paper'}`}
+          className={`h-2.5 rounded-[5px] ${accent ? 'bg-gold' : 'bg-paper'}`}
           style={{ ['--w' as string]: width, animation: `growbar 1.2s ${delay}s cubic-bezier(.2,.8,.2,1) both` }}
         />
       </div>
@@ -112,7 +112,7 @@ export default function Tracker() {
   const followUp = vacancies.find((v) => v.status === 'replied')
   const statusSelectStyle = (s: api.VacancyStatus) =>
     s === 'offer'
-      ? 'bg-accent text-accent-ink'
+      ? 'bg-gold text-ink'
       : s === 'replied'
         ? 'bg-ink text-paper'
         : s === 'rejected'
@@ -140,6 +140,22 @@ export default function Tracker() {
               tilt={-0.3}
               className="animate-popin"
             >
+              {/* Mobile: filters as a pill row instead of the sidebar. */}
+              <div className="flex gap-2 overflow-x-auto border-b border-ink/12 bg-[#EEF0F4] px-4 py-2.5 sm:hidden">
+                {(['all', 'active', 'offers'] as const).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setFilter(f)}
+                    className={`rounded-full px-3.5 py-1.5 font-sans text-xs font-semibold whitespace-nowrap transition ${
+                      filter === f ? 'bg-ink text-paper' : 'border border-ink/25 text-ink-mute'
+                    }`}
+                  >
+                    {f === 'all' ? `Все · ${counts.total}` : f === 'active' ? `Активные · ${counts.active}` : `Офферы · ${counts.offers}`}
+                  </button>
+                ))}
+              </div>
+
               <div className="flex">
                 <div className="flex w-[150px] flex-none flex-col gap-1.5 border-r border-ink/12 bg-[#EEF0F4] px-3 py-3.5 max-sm:hidden">
                   {sidebarItem('all', `Все · ${counts.total}`)}
@@ -176,9 +192,25 @@ export default function Tracker() {
                       key={v.id}
                       className="grid grid-cols-[1fr_130px_82px_72px] items-center gap-3 border-b border-ink/8 px-5 py-3 font-sans text-[13.5px] transition hover:bg-accent/5 max-sm:grid-cols-[1fr_120px]"
                     >
-                      <Link to={`/app/vacancies/${v.id}`} className="min-w-0">
-                        <b className="block truncate font-bold hover:text-accent">{v.name}</b>
-                      </Link>
+                      <span className="min-w-0">
+                        <Link to={`/app/vacancies/${v.id}`}>
+                          <b className="block truncate font-bold hover:text-accent">{v.name}</b>
+                        </Link>
+                        {/* Mobile: meta and actions live under the name. */}
+                        <span className="mt-1 flex items-center gap-3 font-sans text-[11.5px] whitespace-nowrap sm:hidden">
+                          <span className="text-steel">{relativeTime(v.updated_at)}</span>
+                          <Link to={`/app/vacancies/${v.id}`} className="font-semibold text-accent">
+                            открыть →
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => remove(v.id, v.name)}
+                            className="font-semibold text-steel"
+                          >
+                            удалить
+                          </button>
+                        </span>
+                      </span>
                       <select
                         value={v.status}
                         onChange={(e) => changeStatus(v.id, e.target.value as api.VacancyStatus)}

@@ -28,14 +28,14 @@ export function MenuBar({ nav = false }: { nav?: boolean }) {
       : '··'
 
   const menuItem = ({ isActive }: { isActive: boolean }) =>
-    `px-1 transition ${isActive ? 'font-bold text-accent' : 'text-ink-soft hover:text-ink'}`
+    `px-1 whitespace-nowrap transition ${isActive ? 'font-bold text-accent' : 'text-ink-soft hover:text-ink'}`
 
   return (
-    <div className="relative z-50 flex h-9.5 items-center justify-between border-b border-ink/14 bg-paper/85 px-5 font-sans text-[13px] font-medium backdrop-blur-lg">
-      <div className="flex items-center gap-5.5">
+    <div className="relative z-50 flex h-9.5 items-center justify-between border-b border-ink/14 bg-paper/85 px-3 font-sans text-[13px] font-medium backdrop-blur-lg sm:px-5">
+      <div className="flex items-center gap-3 sm:gap-5.5">
         <Link to="/" className="flex items-center gap-1.5">
           <LogoMark size={19} />
-          <b className="font-bold">GetYourOffer</b>
+          <b className="font-bold max-sm:hidden">GetYourOffer</b>
         </Link>
         {nav ? (
           <span className="flex gap-4.5">
@@ -69,14 +69,20 @@ export function MenuBar({ nav = false }: { nav?: boolean }) {
           </span>
         )}
       </div>
-      <div className="flex items-center gap-4.5 text-[12.5px] text-ink-soft">
+      <div className="flex items-center gap-3 text-[12.5px] text-ink-soft sm:gap-4.5">
         {demo ? (
           <span className="rounded-full border border-accent/40 bg-accent/8 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-accent">
-            демо без бэкенда
+            <span className="max-sm:hidden">демо без бэкенда</span>
+            <span className="sm:hidden">демо</span>
           </span>
         ) : (
           <span className="font-mono text-xs font-semibold text-accent">
-            осталось {freeLeft()} из {FREE_LIMIT} бесплатных
+            <span className="max-sm:hidden">
+              осталось {freeLeft()} из {FREE_LIMIT} бесплатных
+            </span>
+            <span className="sm:hidden">
+              {freeLeft()}/{FREE_LIMIT} беспл.
+            </span>
           </span>
         )}
         <span className="max-sm:hidden">RU</span>

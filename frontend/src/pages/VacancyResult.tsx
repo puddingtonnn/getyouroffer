@@ -15,6 +15,62 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <div className="kicker mb-3.5 text-[11px] text-steel">{children}</div>
 }
 
+// Client-side text download (no backend PDF export yet).
+function downloadText(filename: string, text: string) {
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// Copy/download bar under a document window's titlebar.
+function DocActions({
+  text,
+  filename,
+  dark = false,
+}: {
+  text: string
+  filename: string
+  dark?: boolean
+}) {
+  const [copied, setCopied] = useState(false)
+
+  async function copy() {
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div
+      className={`flex items-center justify-end gap-4 border-b px-6 py-3 ${
+        dark ? 'border-paper/14' : 'border-ink/12'
+      }`}
+    >
+      <button
+        type="button"
+        onClick={copy}
+        className={`font-mono text-xs font-bold transition ${
+          dark ? 'text-accent-ink/70 hover:text-paper' : 'text-accent hover:text-ink'
+        }`}
+      >
+        {copied ? 'СКОПИРОВАНО ✓' : 'СКОПИРОВАТЬ ↗'}
+      </button>
+      <button
+        type="button"
+        onClick={() => downloadText(filename, text)}
+        className={`font-mono text-xs font-bold transition ${
+          dark ? 'text-accent-ink/70 hover:text-paper' : 'text-accent hover:text-ink'
+        }`}
+      >
+        СКАЧАТЬ .TXT ↓
+      </button>
+    </div>
+  )
+}
+
 // Result dashboard as documents on the desktop: the разбор window, the
 // resume 2.0 window and the dark cover-letter window, slightly tilted.
 export default function VacancyResult() {
@@ -25,7 +81,6 @@ export default function VacancyResult() {
   const [vacancy, setVacancy] = useState<api.VacancyWithResumes | null>(null)
   const [result, setResult] = useState<api.TailorResult | null>(stateResult)
   const [error, setError] = useState('')
-  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -60,13 +115,6 @@ export default function VacancyResult() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
-
-  async function copyLetter() {
-    if (!result) return
-    await navigator.clipboard.writeText(result.cover_letter)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -158,6 +206,7 @@ export default function VacancyResult() {
                 {/* Documents */}
                 <div className="flex flex-col gap-6.5">
                   <Window title="резюме_2.0.md — под вакансию" tilt={0.4} className="animate-popin">
+                    <DocActions text={result.tailored_resume} filename="резюме_2.0.txt" />
                     <div className="px-6 py-5 font-sans text-sm/[1.7] whitespace-pre-wrap text-ink-soft">
                       {result.tailored_resume}
                     </div>
@@ -170,15 +219,7 @@ export default function VacancyResult() {
                     tilt={-0.3}
                     className="animate-popin"
                   >
-                    <div className="flex items-center justify-end border-b border-paper/14 px-6 py-3">
-                      <button
-                        type="button"
-                        onClick={copyLetter}
-                        className="font-mono text-xs font-bold text-accent transition hover:text-paper"
-                      >
-                        {copied ? 'СКОПИРОВАНО ✓' : 'СКОПИРОВАТЬ ↗'}
-                      </button>
-                    </div>
+                    <DocActions text={result.cover_letter} filename="сопроводительное_письмо.txt" dark />
                     <div className="px-6 py-5 font-sans text-[14.5px]/[1.75] whitespace-pre-wrap text-paper/85">
                       {result.cover_letter}
                     </div>

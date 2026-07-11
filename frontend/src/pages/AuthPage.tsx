@@ -111,7 +111,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-1 rounded-xl bg-accent p-4 font-sans text-[15px] font-bold text-accent-ink shadow-cta transition hover:bg-ink disabled:cursor-not-allowed disabled:opacity-50"
+                className="cta-gradient mt-1 rounded-xl p-4 font-sans text-[15px] font-bold text-accent-ink shadow-cta transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? 'Секунду…' : isRegister ? 'Создать аккаунт →' : 'Войти →'}
               </button>

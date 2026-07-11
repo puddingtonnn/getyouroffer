@@ -15,7 +15,7 @@ const STATUS_STYLES: Record<VacancyStatus, string> = {
   sent: 'border-[1.5px] border-ink text-ink',
   replied: 'bg-ink text-paper',
   rejected: 'border-[1.5px] border-ink/30 text-steel',
-  offer: 'bg-accent text-accent-ink',
+  offer: 'bg-gold text-ink',
 }
 
 export function StatusBadge({ status }: { status: VacancyStatus }) {

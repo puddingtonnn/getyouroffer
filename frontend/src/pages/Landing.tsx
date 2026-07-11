@@ -61,7 +61,7 @@ function MiniFile({ kind, badge, label }: { kind: 'in' | 'out'; badge: string; l
       <div
         className={`relative mx-auto h-[66px] w-[56px] rounded-[7px] bg-white ${
           kind === 'out'
-            ? 'border-[1.5px] border-accent shadow-[0_8px_20px_rgba(194,40,122,.2)]'
+            ? 'border-[1.5px] border-violet shadow-[0_8px_20px_rgba(111,45,189,.2)]'
             : 'border-[1.5px] border-ink/35'
         }`}
       >
@@ -70,7 +70,7 @@ function MiniFile({ kind, badge, label }: { kind: 'in' | 'out'; badge: string; l
         )}
         <span
           className={`absolute bottom-1 left-1 rounded px-1.25 py-0.5 font-mono text-[8px] font-bold text-white ${
-            kind === 'out' ? 'bg-accent' : badge === 'PDF' ? 'bg-file-pdf' : 'bg-ink-soft'
+            kind === 'out' ? 'bg-violet' : badge === 'PDF' ? 'bg-file-pdf' : 'bg-ink-soft'
           }`}
         >
           {badge}
@@ -88,17 +88,19 @@ function Stamp() {
   return (
     <div className="absolute top-6 right-6 h-[112px] w-[112px] rotate-[10deg] opacity-90 max-sm:hidden">
       <svg viewBox="0 0 120 120" width="112" height="112">
-        <circle cx="60" cy="60" r="56" fill="none" stroke="var(--color-accent)" strokeWidth="3" />
-        <circle cx="60" cy="60" r="39" fill="none" stroke="var(--color-accent)" strokeWidth="1.4" />
+        <circle cx="60" cy="60" r="56" fill="none" stroke="var(--color-gold)" strokeWidth="3" />
+        <circle cx="60" cy="60" r="39" fill="none" stroke="var(--color-gold)" strokeWidth="1.4" />
         <path id="stamp-path" d="M 60,60 m -47,0 a 47,47 0 1,1 94,0 a 47,47 0 1,1 -94,0" fill="none" />
-        <text style={{ font: "700 11px 'Ubuntu Mono',monospace", letterSpacing: '.18em', fill: 'var(--color-accent)' }}>
+        <text
+          style={{ font: "700 11px 'Ubuntu Mono',monospace", letterSpacing: '.18em', fill: 'var(--color-gold-deep)' }}
+        >
           <textPath href="#stamp-path">СООТВЕТСТВИЕ · GETYOUROFFER ·</textPath>
         </text>
         <text
           x="60"
           y="72"
           textAnchor="middle"
-          style={{ font: "600 30px 'Oswald Variable',sans-serif", fill: 'var(--color-accent)' }}
+          style={{ font: "600 30px 'Oswald Variable',sans-serif", fill: 'var(--color-gold-deep)' }}
         >
           84
         </text>
@@ -156,7 +158,7 @@ export default function Landing() {
           <div className="flex items-center gap-3.5">
             <Link
               to={cta}
-              className="inline-block rounded-[14px] bg-accent px-7.5 py-4.5 font-sans text-[16.5px] font-bold text-accent-ink shadow-cta transition hover:-translate-y-0.5 hover:bg-ink"
+              className="cta-gradient inline-block rounded-[14px] px-7.5 py-4.5 font-sans text-[16.5px] font-bold text-accent-ink shadow-cta transition hover:-translate-y-0.5 hover:brightness-110"
             >
               Навести порядок — бесплатно
             </Link>
@@ -250,7 +252,7 @@ export default function Landing() {
           <Notification
             delay={2.4}
             icon={
-              <span className="flex h-8.5 w-8.5 flex-none items-center justify-center rounded-[9px] bg-accent font-sans text-[15px] font-extrabold text-accent-ink">
+              <span className="flex h-8.5 w-8.5 flex-none items-center justify-center rounded-[9px] bg-violet font-sans text-[15px] font-extrabold text-accent-ink">
                 Н
               </span>
             }
@@ -301,7 +303,7 @@ export default function Landing() {
                   </div>
                   <div className="mx-auto mt-3.5 h-[7px] w-[104px] overflow-hidden rounded bg-ink/12">
                     <span
-                      className="block h-[7px] rounded bg-accent"
+                      className="cta-gradient block h-[7px] rounded"
                       style={{
                         ['--w' as string]: '100%',
                         animation: 'growbar 2.4s cubic-bezier(.2,.8,.2,1) infinite',
@@ -382,7 +384,7 @@ export default function Landing() {
               <div className="flex-1">
                 {(
                   [
-                    ['Нейра · аналитик', 'оффер ✓', 'bg-accent text-accent-ink'],
+                    ['Нейра · аналитик', 'оффер ✓', 'bg-gold text-ink'],
                     ['Клевер · данные', 'ответ', 'bg-ink text-paper'],
                     ['Штиль · маркетинг', 'отправлено', 'border-[1.5px] border-ink'],
                     ['Планка · воронка', 'черновик', 'border-[1.5px] border-dashed border-ink/40 text-steel'],
@@ -429,7 +431,7 @@ export default function Landing() {
               ] as const
             ).map(([title, text]) => (
               <div key={title} className="rounded-2xl border border-ink/16 bg-paper p-6">
-                <div className="kicker mb-3 text-[11px] text-accent">✓ {title}</div>
+                <div className="kicker mb-3 text-[11px] text-gold-deep">✓ {title}</div>
                 <p className="font-sans text-sm/[1.6] text-ink-mute">{text}</p>
               </div>
             ))}
@@ -510,7 +512,7 @@ export default function Landing() {
                   </button>
                   <Link
                     to={cta}
-                    className="rounded-xl bg-accent px-6.5 py-3.5 font-sans text-[14.5px] font-bold text-accent-ink shadow-cta transition hover:bg-ink"
+                    className="cta-gradient rounded-xl px-6.5 py-3.5 font-sans text-[14.5px] font-bold text-accent-ink shadow-cta transition hover:brightness-110"
                   >
                     Да, начать бесплатно
                   </Link>
@@ -526,9 +528,9 @@ export default function Landing() {
                 <LogoMark size={52} />
               </DockIcon>
               <DockIcon to={cta} title="Как это работает">
-                <span className="flex h-13 w-13 items-center justify-center rounded-[14px] bg-accent">
+                <span className="flex h-13 w-13 items-center justify-center rounded-[14px] bg-violet">
                   <span className="relative h-5 w-7 overflow-hidden rounded bg-accent-ink">
-                    <span className="absolute top-1 left-1/2 h-0 w-0 -translate-x-1/2 border-t-[11px] border-r-[7px] border-l-[7px] border-t-accent border-r-transparent border-l-transparent rotate-180" />
+                    <span className="absolute top-1 left-1/2 h-0 w-0 -translate-x-1/2 border-t-[11px] border-r-[7px] border-l-[7px] border-t-violet border-r-transparent border-l-transparent rotate-180" />
                   </span>
                 </span>
               </DockIcon>
@@ -542,7 +544,7 @@ export default function Landing() {
               </DockIcon>
               <span className="h-11 w-px bg-ink/18" />
               <DockIcon to={cta} title="3 отклика бесплатно">
-                <span className="flex h-13 w-13 items-center justify-center rounded-[14px] border border-ink/20 bg-[#EEF0F4] font-mono text-[11px] font-bold text-accent">
+                <span className="flex h-13 w-13 items-center justify-center rounded-[14px] border border-ink/20 bg-[#EEF0F4] font-mono text-[11px] font-bold text-gold-deep">
                   3 free
                 </span>
               </DockIcon>

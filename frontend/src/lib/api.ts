@@ -92,6 +92,12 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
 
   if (!res.ok) {
+    // Expired/invalid token anywhere in the app: drop it and go to login.
+    // Login/register 401s mean wrong credentials and stay on the page.
+    if (res.status === 401 && !path.startsWith('/users/login') && !path.startsWith('/users/register')) {
+      clearToken()
+      window.location.assign('/login')
+    }
     let message = 'Что-то пошло не так. Попробуйте позже.'
     try {
       const body = (await res.json()) as { error?: string }

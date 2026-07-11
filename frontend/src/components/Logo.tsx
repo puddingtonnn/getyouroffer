@@ -13,7 +13,7 @@ export function LogoMark({ size = 30 }: { size?: number }) {
         G
       </span>
       <span
-        className="absolute font-display font-black text-accent"
+        className="absolute font-display font-black text-gold"
         style={{ right: size * 0.09, bottom: size * 0.02, fontSize: size * 0.38, lineHeight: 1 }}
       >
         →
