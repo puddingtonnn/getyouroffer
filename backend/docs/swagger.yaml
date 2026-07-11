@@ -128,6 +128,23 @@ definitions:
         description: Error message in Russian
         type: string
     type: object
+  internal_transport_http.ResumeResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      tailored_result:
+        $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume'
+      text:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      vacancy_id:
+        type: string
+    type: object
   internal_transport_http.TextResponse:
     properties:
       text:
@@ -136,6 +153,29 @@ definitions:
   internal_transport_http.UpdateVacancyStatusRequest:
     properties:
       status:
+        type: string
+    type: object
+  internal_transport_http.VacancyResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      resumes:
+        items:
+          $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume'
+        type: array
+      source:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.VacancyStatus'
+      updated_at:
+        type: string
+      user_id:
         type: string
     type: object
   internal_transport_http.authResponse:
@@ -169,26 +209,19 @@ info:
   version: "1.0"
 paths:
   /api/resumes:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Resume data
-        in: body
-        name: resume
-        required: true
-        schema:
-          $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume'
+    get:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
-            $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume'
+            items:
+              $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume'
+            type: array
       security:
       - ApiKeyAuth: []
-      summary: Create a resume
+      summary: List all user resumes
       tags:
       - resumes
   /api/resumes/{id}:
@@ -220,7 +253,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume'
+            $ref: '#/definitions/internal_transport_http.ResumeResponse'
       security:
       - ApiKeyAuth: []
       summary: Get a resume
@@ -253,64 +286,6 @@ paths:
       summary: Tailor resume to vacancy
       tags:
       - tailor
-  /api/tailored-resumes:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Tailored resume data
-        in: body
-        name: tailored_resume
-        required: true
-        schema:
-          $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume'
-      security:
-      - ApiKeyAuth: []
-      summary: Create a tailored resume
-      tags:
-      - tailored-resumes
-  /api/tailored-resumes/{id}:
-    delete:
-      parameters:
-      - description: Tailored Resume ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        "204":
-          description: No Content
-      security:
-      - ApiKeyAuth: []
-      summary: Delete a tailored resume
-      tags:
-      - tailored-resumes
-    get:
-      parameters:
-      - description: Tailored Resume ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume'
-      security:
-      - ApiKeyAuth: []
-      summary: Get a tailored resume
-      tags:
-      - tailored-resumes
   /api/tools/extract-ocr:
     post:
       consumes:
@@ -487,7 +462,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Vacancy'
+            $ref: '#/definitions/internal_transport_http.VacancyResponse'
       security:
       - ApiKeyAuth: []
       summary: Get a vacancy

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/puddingtonnn/getyouroffer/backend/internal/models"
@@ -14,13 +15,13 @@ type TrackerRepo interface {
 	UpdateVacancy(ctx context.Context, v *models.Vacancy) error
 	DeleteVacancy(ctx context.Context, id, userID uuid.UUID) error
 
-	CreateResume(ctx context.Context, res *models.Resume) error
+	ListResumesByVacancy(ctx context.Context, vacancyID uuid.UUID) ([]models.Resume, error)
+	ListAllUserResumes(ctx context.Context, userID uuid.UUID) ([]models.Resume, error)
 	GetResume(ctx context.Context, id uuid.UUID) (*models.Resume, error)
 	DeleteResume(ctx context.Context, id, userID uuid.UUID) error
 
-	CreateTailoredResume(ctx context.Context, tr *models.TailoredResume) error
-	GetTailoredResume(ctx context.Context, id uuid.UUID) (*models.TailoredResume, error)
-	DeleteTailoredResume(ctx context.Context, id uuid.UUID) error
+	// Tailored Resumes (internal use via Resume)
+	GetTailoredResumeByResumeID(ctx context.Context, resumeID uuid.UUID) (*models.TailoredResume, error)
 }
 
 type TrackerService struct {
@@ -39,8 +40,21 @@ func (s *TrackerService) CreateVacancy(ctx context.Context, v *models.Vacancy) (
 	return v, nil
 }
 
-func (s *TrackerService) GetVacancy(ctx context.Context, id uuid.UUID) (*models.Vacancy, error) {
-	return s.repo.GetVacancy(ctx, id)
+func (s *TrackerService) GetVacancy(ctx context.Context, id, userID uuid.UUID) (*models.Vacancy, []models.Resume, error) {
+	v, err := s.repo.GetVacancy(ctx, id)
+	if err != nil {
+		return nil, nil, err
+	}
+	if v.UserID != userID {
+		return nil, nil, models.ErrNotFound
+	}
+
+	resumes, err := s.repo.ListResumesByVacancy(ctx, id)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return v, resumes, nil
 }
 
 func (s *TrackerService) ListVacancies(ctx context.Context, userID uuid.UUID) ([]models.Vacancy, error) {
@@ -59,33 +73,27 @@ func (s *TrackerService) DeleteVacancy(ctx context.Context, id, userID uuid.UUID
 }
 
 // Resumes
-func (s *TrackerService) CreateResume(ctx context.Context, res *models.Resume) (*models.Resume, error) {
-	if err := s.repo.CreateResume(ctx, res); err != nil {
-		return nil, err
-	}
-	return res, nil
+func (s *TrackerService) ListUserResumes(ctx context.Context, userID uuid.UUID) ([]models.Resume, error) {
+	return s.repo.ListAllUserResumes(ctx, userID)
 }
 
-func (s *TrackerService) GetResume(ctx context.Context, id uuid.UUID) (*models.Resume, error) {
-	return s.repo.GetResume(ctx, id)
+func (s *TrackerService) GetResume(ctx context.Context, id, userID uuid.UUID) (*models.Resume, *models.TailoredResume, error) {
+	res, err := s.repo.GetResume(ctx, id)
+	if err != nil {
+		return nil, nil, err
+	}
+	if res.UserID != userID {
+		return nil, nil, models.ErrNotFound
+	}
+
+	tailored, err := s.repo.GetTailoredResumeByResumeID(ctx, id)
+	if err != nil && !errors.Is(err, models.ErrNotFound) {
+		return nil, nil, err
+	}
+
+	return res, tailored, nil
 }
 
 func (s *TrackerService) DeleteResume(ctx context.Context, id, userID uuid.UUID) error {
 	return s.repo.DeleteResume(ctx, id, userID)
-}
-
-// Tailored Resumes
-func (s *TrackerService) CreateTailoredResume(ctx context.Context, tr *models.TailoredResume) (*models.TailoredResume, error) {
-	if err := s.repo.CreateTailoredResume(ctx, tr); err != nil {
-		return nil, err
-	}
-	return tr, nil
-}
-
-func (s *TrackerService) GetTailoredResume(ctx context.Context, id uuid.UUID) (*models.TailoredResume, error) {
-	return s.repo.GetTailoredResume(ctx, id)
-}
-
-func (s *TrackerService) DeleteTailoredResume(ctx context.Context, id uuid.UUID) error {
-	return s.repo.DeleteTailoredResume(ctx, id)
 }

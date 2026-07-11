@@ -16,14 +16,11 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/api/resumes": {
-            "post": {
+            "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
-                ],
-                "consumes": [
-                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -31,23 +28,15 @@ const docTemplate = `{
                 "tags": [
                     "resumes"
                 ],
-                "summary": "Create a resume",
-                "parameters": [
-                    {
-                        "description": "Resume data",
-                        "name": "resume",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume"
-                        }
-                    }
-                ],
+                "summary": "List all user resumes",
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume"
+                            }
                         }
                     }
                 }
@@ -80,7 +69,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume"
+                            "$ref": "#/definitions/internal_transport_http.ResumeResponse"
                         }
                     }
                 }
@@ -146,102 +135,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Result"
                         }
-                    }
-                }
-            }
-        },
-        "/api/tailored-resumes": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tailored-resumes"
-                ],
-                "summary": "Create a tailored resume",
-                "parameters": [
-                    {
-                        "description": "Tailored resume data",
-                        "name": "tailored_resume",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/tailored-resumes/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tailored-resumes"
-                ],
-                "summary": "Get a tailored resume",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Tailored Resume ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "tags": [
-                    "tailored-resumes"
-                ],
-                "summary": "Delete a tailored resume",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Tailored Resume ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
                     }
                 }
             }
@@ -505,7 +398,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Vacancy"
+                            "$ref": "#/definitions/internal_transport_http.VacancyResponse"
                         }
                     }
                 }
@@ -772,6 +665,32 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_transport_http.ResumeResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "tailored_result": {
+                    "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.TailoredResume"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "vacancy_id": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_transport_http.TextResponse": {
             "type": "object",
             "properties": {
@@ -784,6 +703,41 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_http.VacancyResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resumes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Resume"
+                    }
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.VacancyStatus"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

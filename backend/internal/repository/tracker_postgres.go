@@ -72,6 +72,28 @@ func (r *TrackerRepository) ListVacancies(ctx context.Context, userID uuid.UUID)
 	return vacancies, nil
 }
 
+func (r *TrackerRepository) ListResumesByVacancy(ctx context.Context, vacancyID uuid.UUID) ([]models.Resume, error) {
+	const query = `
+		SELECT id, vacancy_id, user_id, text, created_at, updated_at
+		FROM resumes WHERE vacancy_id = $1 ORDER BY created_at DESC`
+
+	rows, err := r.pool.Query(ctx, query, vacancyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var resumes []models.Resume
+	for rows.Next() {
+		var res models.Resume
+		if err := rows.Scan(&res.ID, &res.VacancyID, &res.UserID, &res.Text, &res.CreatedAt, &res.UpdatedAt); err != nil {
+			return nil, err
+		}
+		resumes = append(resumes, res)
+	}
+	return resumes, nil
+}
+
 func (r *TrackerRepository) UpdateVacancy(ctx context.Context, v *models.Vacancy) error {
 	const query = `
 		UPDATE vacancies 
@@ -96,18 +118,35 @@ func (r *TrackerRepository) DeleteVacancy(ctx context.Context, id, userID uuid.U
 }
 
 // Resumes
-func (r *TrackerRepository) CreateResume(ctx context.Context, res *models.Resume) error {
-	const query = `
-		INSERT INTO resumes (id, vacancy_id, user_id, text)
-		VALUES ($1, $2, $3, $4)
-		RETURNING created_at, updated_at`
-
-	if res.ID == uuid.Nil {
-		res.ID = uuid.New()
+func (r *TrackerRepository) ListAllUserResumes(ctx context.Context, userID uuid.UUID) ([]models.Resume, error) {
+	rows, err := r.pool.Query(ctx, `SELECT id, vacancy_id, user_id, text FROM resumes WHERE user_id = $1`, userID)
+	if err != nil {
+		return nil, err
 	}
+	defer rows.Close()
 
-	return r.pool.QueryRow(ctx, query, res.ID, res.VacancyID, res.UserID, res.Text).
-		Scan(&res.CreatedAt, &res.UpdatedAt)
+	var list []models.Resume
+	for rows.Next() {
+		var res models.Resume
+		if err := rows.Scan(&res.ID, &res.VacancyID, &res.UserID, &res.Text); err != nil {
+			return nil, err
+		}
+		list = append(list, res)
+	}
+	return list, nil
+}
+
+func (r *TrackerRepository) GetTailoredResumeByResumeID(ctx context.Context, resumeID uuid.UUID) (*models.TailoredResume, error) {
+	var tr models.TailoredResume
+	err := r.pool.QueryRow(ctx, `SELECT id, resume_id, result FROM tailored_resumes WHERE resume_id = $1`, resumeID).
+		Scan(&tr.ID, &tr.ResumeID, &tr.Result)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, models.ErrNotFound
+		}
+		return nil, err
+	}
+	return &tr, nil
 }
 
 func (r *TrackerRepository) GetResume(ctx context.Context, id uuid.UUID) (*models.Resume, error) {
@@ -131,47 +170,6 @@ func (r *TrackerRepository) GetResume(ctx context.Context, id uuid.UUID) (*model
 func (r *TrackerRepository) DeleteResume(ctx context.Context, id, userID uuid.UUID) error {
 	const query = `DELETE FROM resumes WHERE id = $1 AND user_id = $2`
 	res, err := r.pool.Exec(ctx, query, id, userID)
-	if err != nil {
-		return err
-	}
-	if res.RowsAffected() == 0 {
-		return models.ErrNotFound
-	}
-	return nil
-}
-
-// Tailored Resumes
-func (r *TrackerRepository) CreateTailoredResume(ctx context.Context, tr *models.TailoredResume) error {
-	const query = `
-		INSERT INTO tailored_resumes (id, resume_id, result)
-		VALUES ($1, $2, $3)
-		RETURNING created_at`
-
-	if tr.ID == uuid.Nil {
-		tr.ID = uuid.New()
-	}
-
-	return r.pool.QueryRow(ctx, query, tr.ID, tr.ResumeID, tr.Result).
-		Scan(&tr.CreatedAt)
-}
-
-func (r *TrackerRepository) GetTailoredResume(ctx context.Context, id uuid.UUID) (*models.TailoredResume, error) {
-	const query = `SELECT id, resume_id, result, created_at FROM tailored_resumes WHERE id = $1`
-
-	var tr models.TailoredResume
-	err := r.pool.QueryRow(ctx, query, id).Scan(&tr.ID, &tr.ResumeID, &tr.Result, &tr.CreatedAt)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, models.ErrNotFound
-		}
-		return nil, err
-	}
-	return &tr, nil
-}
-
-func (r *TrackerRepository) DeleteTailoredResume(ctx context.Context, id uuid.UUID) error {
-	const query = `DELETE FROM tailored_resumes WHERE id = $1`
-	res, err := r.pool.Exec(ctx, query, id)
 	if err != nil {
 		return err
 	}

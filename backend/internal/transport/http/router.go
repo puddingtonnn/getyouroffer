@@ -58,14 +58,9 @@ func NewRouter(pool *pgxpool.Pool, tailorH *TailorHandler, userH *UserHandler, t
 				r.Delete("/{id}", trackerH.DeleteVacancy)
 			})
 			r.Route("/api/resumes", func(r chi.Router) {
-				r.Post("/", trackerH.CreateResume)
+				r.Get("/", trackerH.ListResumes)
 				r.Get("/{id}", trackerH.GetResume)
 				r.Delete("/{id}", trackerH.DeleteResume)
-			})
-			r.Route("/api/tailored-resumes", func(r chi.Router) {
-				r.Post("/", trackerH.CreateTailoredResume)
-				r.Get("/{id}", trackerH.GetTailoredResume)
-				r.Delete("/{id}", trackerH.DeleteTailoredResume)
 			})
 		})
 	}

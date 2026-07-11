@@ -13,18 +13,14 @@ import (
 
 type trackerService interface {
 	CreateVacancy(ctx context.Context, v *models.Vacancy) (*models.Vacancy, error)
-	GetVacancy(ctx context.Context, id uuid.UUID) (*models.Vacancy, error)
+	GetVacancy(ctx context.Context, id, userID uuid.UUID) (*models.Vacancy, []models.Resume, error)
 	ListVacancies(ctx context.Context, userID uuid.UUID) ([]models.Vacancy, error)
 	UpdateVacancy(ctx context.Context, v *models.Vacancy) (*models.Vacancy, error)
 	DeleteVacancy(ctx context.Context, id, userID uuid.UUID) error
 
-	CreateResume(ctx context.Context, res *models.Resume) (*models.Resume, error)
-	GetResume(ctx context.Context, id uuid.UUID) (*models.Resume, error)
+	ListUserResumes(ctx context.Context, userID uuid.UUID) ([]models.Resume, error)
+	GetResume(ctx context.Context, id, userID uuid.UUID) (*models.Resume, *models.TailoredResume, error)
 	DeleteResume(ctx context.Context, id, userID uuid.UUID) error
-
-	CreateTailoredResume(ctx context.Context, tr *models.TailoredResume) (*models.TailoredResume, error)
-	GetTailoredResume(ctx context.Context, id uuid.UUID) (*models.TailoredResume, error)
-	DeleteTailoredResume(ctx context.Context, id uuid.UUID) error
 }
 
 type TrackerHandler struct {
@@ -98,22 +94,33 @@ func (h *TrackerHandler) CreateVacancy(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusCreated, res)
 }
 
+type VacancyResponse struct {
+	models.Vacancy
+	Resumes []models.Resume `json:"resumes"`
+}
+
 // GetVacancy handles GET /api/vacancies/{id}
 // @Summary Get a vacancy
 // @Tags vacancies
 // @Produce json
 // @Param id path string true "Vacancy ID"
-// @Success 200 {object} models.Vacancy
+// @Success 200 {object} VacancyResponse
 // @Security ApiKeyAuth
 // @Router /api/vacancies/{id} [get]
 func (h *TrackerHandler) GetVacancy(w http.ResponseWriter, r *http.Request) {
+	userID, err := getUserID(r)
+	if err != nil {
+		WriteError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		WriteError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
-	v, err := h.service.GetVacancy(r.Context(), id)
+	v, resumes, err := h.service.GetVacancy(r.Context(), id, userID)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
 			WriteError(w, http.StatusNotFound, "vacancy not found")
@@ -122,7 +129,10 @@ func (h *TrackerHandler) GetVacancy(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
-	WriteJSON(w, http.StatusOK, v)
+	WriteJSON(w, http.StatusOK, VacancyResponse{
+		Vacancy: *v,
+		Resumes: resumes,
+	})
 }
 
 // ListVacancies handles GET /api/vacancies
@@ -188,7 +198,7 @@ func (h *TrackerHandler) UpdateVacancy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	v, err := h.service.GetVacancy(r.Context(), id)
+	v, _, err := h.service.GetVacancy(r.Context(), id, userID)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
 			WriteError(w, http.StatusNotFound, "vacancy not found")
@@ -246,35 +256,31 @@ func (h *TrackerHandler) DeleteVacancy(w http.ResponseWriter, r *http.Request) {
 
 // Resumes
 
-// CreateResume handles POST /api/resumes
-// @Summary Create a resume
+type ResumeResponse struct {
+	models.Resume
+	TailoredResult *models.TailoredResume `json:"tailored_result"`
+}
+
+// ListResumes handles GET /api/resumes
+// @Summary List all user resumes
 // @Tags resumes
-// @Accept json
 // @Produce json
-// @Param resume body models.Resume true "Resume data"
-// @Success 201 {object} models.Resume
+// @Success 200 {array} models.Resume
 // @Security ApiKeyAuth
-// @Router /api/resumes [post]
-func (h *TrackerHandler) CreateResume(w http.ResponseWriter, r *http.Request) {
+// @Router /api/resumes [get]
+func (h *TrackerHandler) ListResumes(w http.ResponseWriter, r *http.Request) {
 	userID, err := getUserID(r)
 	if err != nil {
 		WriteError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	var res models.Resume
-	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
-		WriteError(w, http.StatusBadRequest, "invalid request")
-		return
-	}
-	res.UserID = userID
-
-	created, err := h.service.CreateResume(r.Context(), &res)
+	list, err := h.service.ListUserResumes(r.Context(), userID)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
-	WriteJSON(w, http.StatusCreated, created)
+	WriteJSON(w, http.StatusOK, list)
 }
 
 // GetResume handles GET /api/resumes/{id}
@@ -282,17 +288,23 @@ func (h *TrackerHandler) CreateResume(w http.ResponseWriter, r *http.Request) {
 // @Tags resumes
 // @Produce json
 // @Param id path string true "Resume ID"
-// @Success 200 {object} models.Resume
+// @Success 200 {object} ResumeResponse
 // @Security ApiKeyAuth
 // @Router /api/resumes/{id} [get]
 func (h *TrackerHandler) GetResume(w http.ResponseWriter, r *http.Request) {
+	userID, err := getUserID(r)
+	if err != nil {
+		WriteError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		WriteError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
-	res, err := h.service.GetResume(r.Context(), id)
+	res, tailored, err := h.service.GetResume(r.Context(), id, userID)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
 			WriteError(w, http.StatusNotFound, "resume not found")
@@ -301,7 +313,10 @@ func (h *TrackerHandler) GetResume(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
-	WriteJSON(w, http.StatusOK, res)
+	WriteJSON(w, http.StatusOK, ResumeResponse{
+		Resume:         *res,
+		TailoredResult: tailored,
+	})
 }
 
 // DeleteResume handles DELETE /api/resumes/{id}
@@ -327,84 +342,6 @@ func (h *TrackerHandler) DeleteResume(w http.ResponseWriter, r *http.Request) {
 	if err := h.service.DeleteResume(r.Context(), id, userID); err != nil {
 		if errors.Is(err, models.ErrNotFound) {
 			WriteError(w, http.StatusNotFound, "resume not found")
-			return
-		}
-		WriteError(w, http.StatusInternalServerError, "internal error")
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// Tailored Resumes
-
-// CreateTailoredResume handles POST /api/tailored-resumes
-// @Summary Create a tailored resume
-// @Tags tailored-resumes
-// @Accept json
-// @Produce json
-// @Param tailored_resume body models.TailoredResume true "Tailored resume data"
-// @Success 201 {object} models.TailoredResume
-// @Security ApiKeyAuth
-// @Router /api/tailored-resumes [post]
-func (h *TrackerHandler) CreateTailoredResume(w http.ResponseWriter, r *http.Request) {
-	var tr models.TailoredResume
-	if err := json.NewDecoder(r.Body).Decode(&tr); err != nil {
-		WriteError(w, http.StatusBadRequest, "invalid request")
-		return
-	}
-
-	created, err := h.service.CreateTailoredResume(r.Context(), &tr)
-	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "internal error")
-		return
-	}
-	WriteJSON(w, http.StatusCreated, created)
-}
-
-// GetTailoredResume handles GET /api/tailored-resumes/{id}
-// @Summary Get a tailored resume
-// @Tags tailored-resumes
-// @Produce json
-// @Param id path string true "Tailored Resume ID"
-// @Success 200 {object} models.TailoredResume
-// @Security ApiKeyAuth
-// @Router /api/tailored-resumes/{id} [get]
-func (h *TrackerHandler) GetTailoredResume(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		WriteError(w, http.StatusBadRequest, "invalid id")
-		return
-	}
-
-	tr, err := h.service.GetTailoredResume(r.Context(), id)
-	if err != nil {
-		if errors.Is(err, models.ErrNotFound) {
-			WriteError(w, http.StatusNotFound, "tailored resume not found")
-			return
-		}
-		WriteError(w, http.StatusInternalServerError, "internal error")
-		return
-	}
-	WriteJSON(w, http.StatusOK, tr)
-}
-
-// DeleteTailoredResume handles DELETE /api/tailored-resumes/{id}
-// @Summary Delete a tailored resume
-// @Tags tailored-resumes
-// @Param id path string true "Tailored Resume ID"
-// @Success 204 "No Content"
-// @Security ApiKeyAuth
-// @Router /api/tailored-resumes/{id} [delete]
-func (h *TrackerHandler) DeleteTailoredResume(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		WriteError(w, http.StatusBadRequest, "invalid id")
-		return
-	}
-
-	if err := h.service.DeleteTailoredResume(r.Context(), id); err != nil {
-		if errors.Is(err, models.ErrNotFound) {
-			WriteError(w, http.StatusNotFound, "tailored resume not found")
 			return
 		}
 		WriteError(w, http.StatusInternalServerError, "internal error")
