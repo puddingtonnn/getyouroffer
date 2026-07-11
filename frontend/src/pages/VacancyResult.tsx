@@ -39,6 +39,31 @@ function downloadText(filename: string, text: string) {
   URL.revokeObjectURL(url)
 }
 
+// copyText tries the async clipboard API and falls back to the legacy
+// execCommand path (blocked-permission iframes, older browsers). Returns
+// whether the text actually landed in the clipboard.
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch {
+    // Permissions policy or insecure context: try the legacy path.
+  }
+  try {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    const ok = document.execCommand('copy')
+    ta.remove()
+    return ok
+  } catch {
+    return false
+  }
+}
+
 // Copy/download bar under a document window's titlebar.
 function DocActions({
   text,
@@ -49,13 +74,15 @@ function DocActions({
   filename: string
   dark?: boolean
 }) {
-  const [copied, setCopied] = useState(false)
+  const [copyState, setCopyState] = useState<'idle' | 'ok' | 'fail'>('idle')
 
   async function copy() {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setCopyState((await copyText(text)) ? 'ok' : 'fail')
+    setTimeout(() => setCopyState('idle'), 2500)
   }
+
+  const copyLabel =
+    copyState === 'ok' ? 'СКОПИРОВАНО ✓' : copyState === 'fail' ? 'НЕ ВЫШЛО — СКАЧАЙТЕ ФАЙЛ' : 'СКОПИРОВАТЬ ↗'
 
   return (
     <div
@@ -70,7 +97,7 @@ function DocActions({
           dark ? 'text-accent-ink/70 hover:text-paper' : 'text-accent hover:text-ink'
         }`}
       >
-        {copied ? 'СКОПИРОВАНО ✓' : 'СКОПИРОВАТЬ ↗'}
+        {copyLabel}
       </button>
       <button
         type="button"
