@@ -1,29 +1,20 @@
 basePath: /
 definitions:
-  http.authResponse:
+  github_com_puddingtonnn_getyouroffer_backend_internal_models.Gap:
     properties:
-      token:
+      requirement:
+        type: string
+      suggestion:
         type: string
     type: object
-  http.loginRequest:
+  github_com_puddingtonnn_getyouroffer_backend_internal_models.Match:
     properties:
-      email:
+      evidence:
         type: string
-      password:
+      requirement:
         type: string
     type: object
-  http.registerRequest:
-    properties:
-      email:
-        type: string
-      first_name:
-        type: string
-      last_name:
-        type: string
-      password:
-        type: string
-    type: object
-  models.Profile:
+  github_com_puddingtonnn_getyouroffer_backend_internal_models.Profile:
     properties:
       created_at:
         type: string
@@ -38,6 +29,50 @@ definitions:
       user_id:
         type: string
     type: object
+  github_com_puddingtonnn_getyouroffer_backend_internal_models.Result:
+    properties:
+      cover_letter:
+        type: string
+      gaps:
+        items:
+          $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Gap'
+        type: array
+      keywords_to_add:
+        items:
+          type: string
+        type: array
+      match_score:
+        type: number
+      matches:
+        items:
+          $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Match'
+        type: array
+      tailored_resume:
+        type: string
+    type: object
+  internal_transport_http.authResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  internal_transport_http.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  internal_transport_http.registerRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+    type: object
 host: localhost:8090
 info:
   contact: {}
@@ -45,6 +80,33 @@ info:
   title: GetYourOffer API
   version: "1.0"
 paths:
+  /api/tailor:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Extracts text from a PDF resume, analyzes it against a vacancy
+        text using LLM, and returns a tailored resume, cover letter, and match analysis.
+      parameters:
+      - description: Resume PDF file (max 10MB)
+        in: formData
+        name: resume
+        required: true
+        type: file
+      - description: Vacancy text (max 50KB)
+        in: formData
+        name: vacancy
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Result'
+      summary: Tailor resume to vacancy
+      tags:
+      - tailor
   /api/users/login:
     post:
       consumes:
@@ -56,14 +118,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.loginRequest'
+          $ref: '#/definitions/internal_transport_http.loginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/http.authResponse'
+            $ref: '#/definitions/internal_transport_http.authResponse'
       summary: Login user
       tags:
       - users
@@ -76,7 +138,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Profile'
+            $ref: '#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Profile'
       security:
       - ApiKeyAuth: []
       summary: Get current profile
@@ -93,14 +155,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.registerRequest'
+          $ref: '#/definitions/internal_transport_http.registerRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/http.authResponse'
+            $ref: '#/definitions/internal_transport_http.authResponse'
       summary: Register a new user
       tags:
       - users

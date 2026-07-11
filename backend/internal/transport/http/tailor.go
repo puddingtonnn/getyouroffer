@@ -40,7 +40,18 @@ func NewTailorHandler(service tailorService) *TailorHandler {
 
 // Tailor accepts a multipart form (resume PDF + vacancy text) and returns the
 // structured Result as JSON. Resume, vacancy and letter content are not logged.
+//
+// @Summary		Tailor resume to vacancy
+// @Description	Extracts text from a PDF resume, analyzes it against a vacancy text using LLM, and returns a tailored resume, cover letter, and match analysis.
+// @Tags			tailor
+// @Accept			multipart/form-data
+// @Produce		json
+// @Param			resume	formData	file	true	"Resume PDF file (max 10MB)"
+// @Param			vacancy	formData	string	true	"Vacancy text (max 50KB)"
+// @Success		200		{object}	models.Result
+// @Router			/api/tailor [post]
 func (h *TailorHandler) Tailor(w http.ResponseWriter, r *http.Request) {
+
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
 
 	if err := r.ParseMultipartForm(maxUploadBytes); err != nil {

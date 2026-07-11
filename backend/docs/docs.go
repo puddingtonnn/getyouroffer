@@ -15,6 +15,45 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/tailor": {
+            "post": {
+                "description": "Extracts text from a PDF resume, analyzes it against a vacancy text using LLM, and returns a tailored resume, cover letter, and match analysis.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tailor"
+                ],
+                "summary": "Tailor resume to vacancy",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Resume PDF file (max 10MB)",
+                        "name": "resume",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vacancy text (max 50KB)",
+                        "name": "vacancy",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Result"
+                        }
+                    }
+                }
+            }
+        },
         "/api/users/login": {
             "post": {
                 "description": "Authenticate user and return JWT",
@@ -35,7 +74,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.loginRequest"
+                            "$ref": "#/definitions/internal_transport_http.loginRequest"
                         }
                     }
                 ],
@@ -43,7 +82,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/http.authResponse"
+                            "$ref": "#/definitions/internal_transport_http.authResponse"
                         }
                     }
                 }
@@ -68,7 +107,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Profile"
+                            "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Profile"
                         }
                     }
                 }
@@ -94,7 +133,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.registerRequest"
+                            "$ref": "#/definitions/internal_transport_http.registerRequest"
                         }
                     }
                 ],
@@ -102,7 +141,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/http.authResponse"
+                            "$ref": "#/definitions/internal_transport_http.authResponse"
                         }
                     }
                 }
@@ -110,43 +149,29 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "http.authResponse": {
+        "github_com_puddingtonnn_getyouroffer_backend_internal_models.Gap": {
             "type": "object",
             "properties": {
-                "token": {
+                "requirement": {
+                    "type": "string"
+                },
+                "suggestion": {
                     "type": "string"
                 }
             }
         },
-        "http.loginRequest": {
+        "github_com_puddingtonnn_getyouroffer_backend_internal_models.Match": {
             "type": "object",
             "properties": {
-                "email": {
+                "evidence": {
                     "type": "string"
                 },
-                "password": {
+                "requirement": {
                     "type": "string"
                 }
             }
         },
-        "http.registerRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Profile": {
+        "github_com_puddingtonnn_getyouroffer_backend_internal_models.Profile": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -165,6 +190,74 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_puddingtonnn_getyouroffer_backend_internal_models.Result": {
+            "type": "object",
+            "properties": {
+                "cover_letter": {
+                    "type": "string"
+                },
+                "gaps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Gap"
+                    }
+                },
+                "keywords_to_add": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "match_score": {
+                    "type": "number"
+                },
+                "matches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_puddingtonnn_getyouroffer_backend_internal_models.Match"
+                    }
+                },
+                "tailored_resume": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_http.authResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_http.loginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_http.registerRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
                     "type": "string"
                 }
             }
